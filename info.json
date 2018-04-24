@@ -1,0 +1,10 @@
+{
+  "name": "Senpais_Trains",
+  "version": "1.0.7",
+  "title": "Senpais Trains",
+  "author": "LuziferSenpai",
+  "Licence": "Custom",
+  "description": "This Modification for Factorio, includes Electric Trains, Battle Trains and -Wagons, a new Artillery Wagon, 2 new Breaking Forces, Automatic Coupling and Smarter Trains via Circuit Network and a GUI for Stats, Overview and more that is Train related! Let me know if you have Ideas for more Features!",
+  "dependencies": ["base >= 0.16"],
+  "factorio_version": "0.16"
+}
