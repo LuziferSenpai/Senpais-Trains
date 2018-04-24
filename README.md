@@ -20,7 +20,7 @@ this is a combination of my two old MODs [Senpais Electric Trains](https://mods.
  - If you want to Uncouple you send the Uncoupling Signal with the Strength of how many you want to Uncouple.
  - Like in the GIF below it sends a Signal Strength of 10.
  - ITS NOT DESIGNED FOR SINGLE HEADED TRAINS!!!
-![Coupling!](https://i.imgur.com/FPdnvFT.gifv)
+[Coupling!](https://i.imgur.com/FPdnvFT.gifv)
 
 ## Simpler Smarter Trains!
  - You open the GUI and have a Train open.
