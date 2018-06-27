@@ -37,40 +37,7 @@ this is a combination of my two old MODs [Senpais Electric Trains](https://mods.
 
 ## It adds 2 new Braking Force Research!
 
-## Can I create my own Trains?
-### Yes you can, I explane it here
-
-## This is the Function to create a Electronic Locomotive!
-
-    Senpais.Functions.Create.Elec_Locomotive
-    ( multiplier, name, icon, health, weight, speed, color, grid, subgroup, order, stack,
-      ingredients, tech )
-
-## This is the Function to create a Battle Locomotive!
-
-    Senpais.Functions.Create.Battle_Locomotive
-    ( multiplier, name, icon, health, weight, speed, color, grid, subgroup, order, stack,
-      ingredients, tech )
-
-## This is the Function to create a Battle Wagon!
-
-    Senpais.Functions.Create.Battle_Wagon
-    ( name, icon, inventory, health, weight, speed, color, grid, subgroup, order,
-      stack, ingredients, tech )
-
-##This is the Function to create a Grid!
-
-    Senpais.Functions.Create.Grid( name, width, height, categories )
-
-### Replace the Spaceholders.
-
-## And now the important Part!
-### If you want to add a Electronic Train than you need to go into your control.lua and do this:
-
-    if remote.interfaces["ADDTRAIN"] then 
-    remote.call( "ADDTRAIN", "ADDTRAIN", Train Name, multiplier ) end
-
-### And this is all for this!
+## If you want ModSupport than read the File for that in the Mod Folder.
 
 ## Does it have a Config?
 
@@ -87,6 +54,13 @@ this is a combination of my two old MODs [Senpais Electric Trains](https://mods.
  - Offset Issues by the Battle Laser while shooting
 
 ## Releases
+ - v1.1.0
+    - Reworked the Code
+    - Removed a bit of Code Mass
+    - Redone GUI
+    - Redone globals
+    - Redone PlayerData
+    - Redone most of the Code
  - v1.0.7
     - Added Player Train Kills List
  - v1.0.6
