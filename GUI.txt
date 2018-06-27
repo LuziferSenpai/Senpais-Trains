@@ -1,0 +1,147 @@
+mod_gui.get_frame_flow
+	A01 SenpaisTrainsMainGui
+		A02 SenpaisTrainsTable01
+			A03 SenpaisTrainsHiddenFrame01
+				A04 SenpaisTrainsFrame01
+					A05 SenpaisTrainsSpriteButton01
+					A05 SenpaisTrainsSpriteButton02
+					A05 SenpaisTrainsSpriteButton03
+					A05 SenpaisTrainsSpriteButton04
+					A05 SenpaisTrainsSpriteButton05
+			A03 SenpaisTrainsHiddenFrame02
+				B01 SenpaisTrainsFrame02
+					B02 SenpaisTrainsScrollPane01
+						B03 SenpaisTrainsFrame03
+							B04 SenpaisTrainsTable02
+								B05 SenpaisTrainsLabel01
+								B05 SenpaisTrainsLabel02
+								B05 nil
+								B06 SenpaisTrainsSprite01_ .. n
+								B06 SenpaisTrainsLabel03_ .. n
+								B06 SenpaisTrainsButton01_ .. n
+				F01 SenpaisTrainsFrame13
+					F02 SenpaisTrainsScrollPane04
+						F03 SenpaisTrainsFrame14
+							F04 SenpaisTrainsTable05
+								F05 SenpaisTrainsLabel14
+								F05 SenpaisTrainsLabel15
+								F05 nil
+								F06 SenpaisTrainsSprite02_ .. n
+								F06 SenpaisTrainsLabel16_ .. n
+								F06 SenpaisTrainsButton04_ .. n
+				H01 SenpaisTrainsFrame23
+					H02 SenpaisTrainsScrollPane06
+						H03 SenpaisTrainsFrame24
+							H04 SenpaisTrainsTable10
+								H05 SenpaisTrainsLabel25
+								H05 SenpaisTrainsLabel26
+								H05 nil
+								H06 SenpaisTrainsSprite04_ .. n
+								H06 SenpaisTrainsLabel27_ .. n
+								H06 SenpaisTrainsButton05_ .. n
+				J01 SenpaisTrainsFrame27
+					J02 SenpaisTrainsTable13
+						J03 SenpaisTrainsDropDown02
+						J03 SenpaisTrainsChooseElemButton01
+						J03 SenpaisTrainsSpriteButton06
+						J03 SenpaisTrainsSpriteButton07
+					K01 SenpaisTrainsScrollPane08
+						K02 SenpaisTrainsFrame28
+							K03 SenpaisTrainsTable14
+								K04 SenpaisTrainsLabel31
+								K04 SenpaisTrainsLabel32
+								K05 SenpaisTrainsLabel33_ .. y
+								K05 SenpaisTrainsChooseElemButton02_ .. y
+				M01 SenpaisTrainsFrame30
+					M02 SenpaisTrainsFlow02
+						M03 SenpaisTrainsTable16
+							M04 SenpaisTrainsLabel34
+							M04 SenpaisTrainsLabel35
+					M02 SenpaisTrainsFlow03
+						M03 SenpaisTrainsTable17
+							M04 SenpaisTrainsLabel36
+							M04 SenpaisTrainsLabel37
+					M02 SenpaisTrainsFlow04
+						M03 SenpaisTrainsTable18
+							M04 SenpaisTrainsLabel38
+							M04 SenpaisTrainsLabel39
+					M02 SenpaisTrainsFlow05
+						M03 SenpaisTrainsTable19
+							M04 SenpaisTrainsLabel40
+							M04 SenpaisTrainsLabel41
+					M02 SenpaisTrainsFlow06
+						M03 SenpaisTrainsTable20
+							M04 SenpaisTrainsLabel42
+							M04 SenpaisTrainsLabel43
+					M02 SenpaisTrainsProgressbar02
+			A03 SenpaisTrainsHiddenFrame03
+				C01 SenpaisTrainsFrame04
+					C02 SenpaisTrainsScrollPane02
+						C03 SenpaisTrainsFrame05
+							C04 SenpaisTrainsTable03
+								C05 SenpaisTrainsLabel04
+								C05 SenpaisTrainsLabel05
+								C05 SenpaisTrainsLabel06
+								C05 SenpaisTrainsLabel07
+								C05 nil
+								C06 SenpaisTrainsFrame06_ .. u
+									C07 SenpaisTrainsLabel08_ .. u
+								C06 SenpaisTrainsFrame07_ .. u
+									C08 SenpaisTrainsLabel09_ .. u
+								C06 SenpaisTrainsFrame08_ .. u
+									C09 SenpaisTrainsLabel10_ .. u
+								C06 SenpaisTrainsFrame09_ .. u
+									C09 SenpaisTrainsLabel11_ .. u
+								C06 SenpaisTrainsFrame10_ .. u
+									C09 SenpaisTrainsButton02_ .. u
+				G01 SenpaisTrainsFrame15
+					G02 SenpaisTrainsScrollPane05
+						G03 SenpaisTrainsFrame16
+							G04 SenpaisTrainsTable06
+								G05 SenpaisTrainsFrame17
+									G06 SenpaisTrainsLabel17
+								G05 SenpaisTrainsFrame18
+									G06 SenpaisTrainsTable07
+										G07 SenpaisTrainsLabel19
+										G07 SenpaisTrainsLabel20
+								G05 SenpaisTrainsFrame19
+									G06 SenpaisTrainsLabel18
+								G05 SenpaisTrainsFrame20
+									G06 SenpaisTrainsTable08
+										G07 SenpaisTrainsLabel21
+										G07 SenpaisTrainsLabel22
+								G08 SenpaisTrainsFrame21_ .. u
+									G09 SenpaisTrainsLabel23_ .. u
+								G08 SenpaisTrainsFrame22_ .. u
+									G09 SenpaisTrainsTable09_ .. u
+										G10 SenpaisTrainsSprite03_ .. u .. _ .. n
+										G10 SenpaisTrainsLabel24_ .. u .. _ .. n
+				I01 SenpaisTrainsFrame25
+					I02 SenpaisTrainsScrollPane07
+						I03 SenpaisTrainsFrame26
+							I04 SenpaisTrainsTable11
+								I05 SenpaisTrainsLabel28
+								I05 SenpaisTrainsLabel29
+								I06 SenpaisTrainsLabel30_ .. u
+								I06 SenpaisTrainsFlow01_ .. u
+									I07 SenpaisTrainsTable12_ .. u
+										I08 SenpaisTrainsSprite05_ .. u
+										I08 SenpaisTrainsProgressbar01_ .. u
+										I08 SenpaisTrainsLabel31_ .. u
+				L01 SenpaisTrainsFrame29
+					L02 SenpaisTrainsTable15
+						L03 SenpaisTrainsTextfield02
+						L03 SenpaisTrainsChooseElemButton03
+					L03 SenpaisTrainsButton06
+			A03 SenpaisTrainsHiddenFrame04
+				D01 SenpaisTrainsFrame11
+					D02 SenpaisTrainsTextfield01
+					D03 SenpaisTrainsDropDown01
+					D03 SenpaisTrainsScrollPane03
+						E01 SenpaisTrainsFrame12
+							E02 SenpaisTrainsTable04
+								E03 nil
+								E03 SenpaisTrainsLabel12
+								E04 SenpaisTrainsRadioButton01_ .. y
+								E04 SenpaisTrainsLabel13_ .. y
+					D04 SenpaisTrainsButton03

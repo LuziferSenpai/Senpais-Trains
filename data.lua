@@ -1,19 +1,155 @@
-require "functions"
 require "config"
 
 local accuname = "Senpais-Power-Provider"
 local artillery_train_name = "Senpais-Dora"
 local MODNAME = "__Senpais_Trains__"
 
+function Senpais.Functions.Create.Elec_Locomotive( multiplier, name, icon, health, weight, speed, color, grid, subgroup, order, stack, ingredients, tech )
+	local MaxPower = multiplier * 600 .. "kW"
+	local train_entity = util.table.deepcopy( data.raw["locomotive"]["locomotive"] )
+	train_entity.name = name
+	train_entity.icon = icon
+	train_entity.minable.result = name
+	train_entity.max_health = health
+	train_entity.weight = weight
+	train_entity.max_speed = speed
+	train_entity.max_power = MaxPower
+	train_entity.burner = { effictivity = 1, fuel_inventory_size = 0 }
+
+	Senpais.Functions.Replace.mask_image_filenames( train_entity.pictures.layers, "diesel-locomotive" )
+
+	train_entity.color = color
+	if grid ~=  nil then
+		train_entity.equipment_grid = grid
+	end
+
+	local train_item = util.table.deepcopy( data.raw["item-with-entity-data"]["locomotive"] )
+	train_item.name = name
+	train_item.icon = icon
+	train_item.subgroup = subgroup
+	train_item.order = order
+	train_item.place_result = name
+	train_item.stack_size = stack
+
+	local train_recipe = util.table.deepcopy( data.raw["recipe"]["locomotive"] )
+	train_recipe.name = name
+	train_recipe.ingredients = ingredients
+	train_recipe.result = name
+
+	data:extend( { train_entity, train_item, train_recipe } )
+
+	table.insert( data.raw["technology"][tech].effects, { type = "unlock-recipe", recipe = name } )
+end
+
+function Senpais.Functions.Create.Battle_Locomotive( multiplier, name, icon, health, weight, speed, color, grid, subgroup, order, stack, ingredients, tech )
+	local MaxPower = multiplier * 600 .. "kW"
+	local train_entity = util.table.deepcopy( data.raw["locomotive"]["locomotive"] )
+	train_entity.name = name
+	train_entity.icon = icon
+	train_entity.minable.result = name
+	train_entity.max_health = health
+	train_entity.weight = weight
+	train_entity.max_speed = speed
+	train_entity.max_power = MaxPower
+
+	Senpais.Functions.Replace.mask_image_filenames( train_entity.pictures.layers, "diesel-locomotive" )
+
+	train_entity.color = color
+	train_entity.equipment_grid = grid
+
+	local train_item = util.table.deepcopy( data.raw["item-with-entity-data"]["locomotive"] )
+	train_item.name = name
+	train_item.icon = icon
+	train_item.subgroup = subgroup
+	train_item.order = order
+	train_item.place_result = name
+	train_item.stack_size = stack
+
+	local train_recipe = util.table.deepcopy( data.raw["recipe"]["locomotive"] )
+	train_recipe.name = name
+	train_recipe.ingredients = ingredients
+	train_recipe.result = name
+
+	data:extend( { train_entity, train_item, train_recipe } )
+
+	table.insert( data.raw["technology"][tech].effects, { type = "unlock-recipe", recipe = name } )
+end
+
+function Senpais.Functions.Create.Battle_Wagon( name, icon, inventory, health, weight, speed, color, grid, subgroup, order, stack, ingredients, tech )
+	local wagon_entity = util.table.deepcopy( data.raw["cargo-wagon"]["cargo-wagon"] )
+	wagon_entity.name = name
+	wagon_entity.icon = icon
+	wagon_entity.inventory_size = inventory
+	wagon_entity.minable.result = name
+	wagon_entity.max_health = health
+	wagon_entity.weight = weight
+	wagon_entity.max_speed = speed
+
+	Senpais.Functions.Replace.mask_image_filenames( wagon_entity.pictures.layers, "cargo-wagon" )
+	Senpais.Functions.Replace.mask_image_filenames( wagon_entity.horizontal_doors.layers, "cargo-wagon" )
+	Senpais.Functions.Replace.mask_image_filenames( wagon_entity.vertical_doors.layers, "cargo-wagon" )
+
+	wagon_entity.color = color
+	wagon_entity.equipment_grid = grid
+
+	local wagon_item = util.table.deepcopy( data.raw["item-with-entity-data"]["cargo-wagon"] )
+	wagon_item.name = name
+	wagon_item.icon = icon
+	wagon_item.subgroup = subgroup
+	wagon_item.order = order
+	wagon_item.place_result = name
+	wagon_item.stack_size = stack
+
+	local wagon_recipe = util.table.deepcopy( data.raw["recipe"]["cargo-wagon"] )
+	wagon_recipe.name = name
+	wagon_recipe.ingredients = ingredients
+	wagon_recipe.result = name
+
+	data:extend( { wagon_entity, wagon_item, wagon_recipe } )
+
+	table.insert( data.raw["technology"][tech].effects, { type = "unlock-recipe", recipe = name } )
+end
+
+function Senpais.Functions.Create.Grid( name, width, height, categories )
+	local grid = util.table.deepcopy( data.raw["equipment-grid"]["large-equipment-grid"] )
+	grid.name = name
+	grid.width = width
+	grid.height = height
+	grid.equipment_categories = categories
+
+	data:extend( { grid } )
+end
+
+function Senpais.Functions.Create.Sprite32x32( name, filename )
+	return { type = "sprite", name = name, filename = filename, priority = "extra-high-no-scale", width = 32, height = 32, scale = 1 }
+end
+
+function Senpais.Functions.Replace.filesnames_in_layer( layer, entity )
+	if layer.filenames then
+		for i, filename in pairs( layer.filenames ) do
+			layer.filenames[i] = string.gsub( filename, "__base__/graphics/entity/" .. entity, MODNAME .. "/graphics/" )
+		end
+	end
+	if layer.filename then
+		layer.file = string.gsub( layer.filename, "__base__/graphics/entity/" .. entity , MODNAME .. "/graphics/" )
+	end
+end
+
+function Senpais.Functions.Replace.mask_image_filenames( layers, entity )
+	for _, layer in pairs( layers ) do
+		if layer.apply_runtime_tint == true then
+			Senpais.Functions.Replace.filesnames_in_layer( layer, entity )
+			if layer.hr_version then
+				Senpais.Functions.Replace.filesnames_in_layer( layer.hr_version, entity )
+			end
+		end 
+	end
+end
+
 Senpais.Functions.Create.Grid( "Senpais-Trains", 10, 10, { "Senpais-Trains" } )
 
 for s, ss in pairs( Senpais.Sprites ) do
-	if data.raw["sprite"] == nil then
-		data.raw["sprite"] = {}
-	end
-	if data.raw["sprite"][s] == nil then
-		data:extend{ Senpais.Functions.Create.Sprite32x32( s, MODNAME .. "/graphics/" .. ss .. ".png" ) }
-	end
+	data:extend{ Senpais.Functions.Create.Sprite32x32( s, MODNAME .. "/graphics/" .. ss .. ".png" ) }
 end
 
 data:extend{ { type = "equipment-category", name = "Senpais-Trains" } }

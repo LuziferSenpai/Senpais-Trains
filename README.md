@@ -1,4 +1,4 @@
-# Senpais-Trains
+# Senpais Trains
 
 Hey Guys,
 

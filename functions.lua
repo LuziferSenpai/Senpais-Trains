@@ -1,874 +1,785 @@
 require "config"
 
-local MODNAME = "__Senpais_Trains__"
+local found = false
 
--- Senpais.Functions.Create
-
-function Senpais.Functions.Create.Elec_Locomotive( multiplier, name, icon, health, weight, speed, color, grid, subgroup, order, stack, ingredients, tech )
-	local MaxPower = multiplier * 600 .. "kW"
-	local train_entity = util.table.deepcopy( data.raw["locomotive"]["locomotive"] )
-	train_entity.name = name
-	train_entity.icon = icon
-	train_entity.minable.result = name
-	train_entity.max_health = health
-	train_entity.weight = weight
-	train_entity.max_speed = speed
-	train_entity.max_power = MaxPower
-	train_entity.burner = { effictivity = 1, fuel_inventory_size = 0 }
-
-	Senpais.Functions.Replace.mask_image_filenames( train_entity.pictures.layers, "diesel-locomotive" )
-
-	train_entity.color = color
-	if grid ~=  nil then
-		train_entity.equipment_grid = grid
-	end
-
-	local train_item = util.table.deepcopy( data.raw["item-with-entity-data"]["locomotive"] )
-	train_item.name = name
-	train_item.icon = icon
-	train_item.subgroup = subgroup
-	train_item.order = order
-	train_item.place_result = name
-	train_item.stack_size = stack
-
-	local train_recipe = util.table.deepcopy( data.raw["recipe"]["locomotive"] )
-	train_recipe.name = name
-	train_recipe.ingredients = ingredients
-	train_recipe.result = name
-
-	data:extend( { train_entity, train_item, train_recipe } )
-
-	table.insert( data.raw["technology"][tech].effects, { type = "unlock-recipe", recipe = name } )
-end
-
-function Senpais.Functions.Create.Battle_Locomotive( multiplier, name, icon, health, weight, speed, color, grid, subgroup, order, stack, ingredients, tech )
-	local MaxPower = multiplier * 600 .. "kW"
-	local train_entity = util.table.deepcopy( data.raw["locomotive"]["locomotive"] )
-	train_entity.name = name
-	train_entity.icon = icon
-	train_entity.minable.result = name
-	train_entity.max_health = health
-	train_entity.weight = weight
-	train_entity.max_speed = speed
-	train_entity.max_power = MaxPower
-
-	Senpais.Functions.Replace.mask_image_filenames( train_entity.pictures.layers, "diesel-locomotive" )
-
-	train_entity.color = color
-	train_entity.equipment_grid = grid
-
-	local train_item = util.table.deepcopy( data.raw["item-with-entity-data"]["locomotive"] )
-	train_item.name = name
-	train_item.icon = icon
-	train_item.subgroup = subgroup
-	train_item.order = order
-	train_item.place_result = name
-	train_item.stack_size = stack
-
-	local train_recipe = util.table.deepcopy( data.raw["recipe"]["locomotive"] )
-	train_recipe.name = name
-	train_recipe.ingredients = ingredients
-	train_recipe.result = name
-
-	data:extend( { train_entity, train_item, train_recipe } )
-
-	table.insert( data.raw["technology"][tech].effects, { type = "unlock-recipe", recipe = name } )
-end
-
-function Senpais.Functions.Create.Battle_Wagon( name, icon, inventory, health, weight, speed, color, grid, subgroup, order, stack, ingredients, tech )
-	local wagon_entity = util.table.deepcopy( data.raw["cargo-wagon"]["cargo-wagon"] )
-	wagon_entity.name = name
-	wagon_entity.icon = icon
-	wagon_entity.inventory_size = inventory
-	wagon_entity.minable.result = name
-	wagon_entity.max_health = health
-	wagon_entity.weight = weight
-	wagon_entity.max_speed = speed
-
-	Senpais.Functions.Replace.mask_image_filenames( wagon_entity.pictures.layers, "cargo-wagon" )
-	Senpais.Functions.Replace.mask_image_filenames( wagon_entity.horizontal_doors.layers, "cargo-wagon" )
-	Senpais.Functions.Replace.mask_image_filenames( wagon_entity.vertical_doors.layers, "cargo-wagon" )
-
-	wagon_entity.color = color
-	wagon_entity.equipment_grid = grid
-
-	local wagon_item = util.table.deepcopy( data.raw["item-with-entity-data"]["cargo-wagon"] )
-	wagon_item.name = name
-	wagon_item.icon = icon
-	wagon_item.subgroup = subgroup
-	wagon_item.order = order
-	wagon_item.place_result = name
-	wagon_item.stack_size = stack
-
-	local wagon_recipe = util.table.deepcopy( data.raw["recipe"]["cargo-wagon"] )
-	wagon_recipe.name = name
-	wagon_recipe.ingredients = ingredients
-	wagon_recipe.result = name
-
-	data:extend( { wagon_entity, wagon_item, wagon_recipe } )
-
-	table.insert( data.raw["technology"][tech].effects, { type = "unlock-recipe", recipe = name } )
-end
-
-function Senpais.Functions.Create.Grid( name, width, height, categories )
-	local grid = util.table.deepcopy( data.raw["equipment-grid"]["large-equipment-grid"] )
-	grid.name = name
-	grid.width = width
-	grid.height = height
-	grid.equipment_categories = categories
-
-	data:extend( { grid } )
-end
-
-function Senpais.Functions.Create.Sprite32x32( name, filename )
-	return { type = "sprite", name = name, filename = filename, priority = "extra-high-no-scale", width = 32, height = 32, scale = 1 }
-end
-
--- Senpais.Functions.Replace
-
-function Senpais.Functions.Replace.filesnames_in_layer( layer, entity )
-	if layer.filenames then
-		for i, filename in pairs( layer.filenames ) do
-			layer.filenames[i] = string.gsub( filename, "__base__/graphics/entity/" .. entity, MODNAME .. "/graphics/" )
-		end
-	end
-	if layer.filename then
-		layer.file = string.gsub( layer.filename, "__base__/graphics/entity/" .. entity , MODNAME .. "/graphics/" )
-	end
-end
-
-function Senpais.Functions.Replace.mask_image_filenames( layers, entity )
-	for _, layer in pairs( layers ) do
-		if layer.apply_runtime_tint == true then
-			Senpais.Functions.Replace.filesnames_in_layer( layer, entity )
-			if layer.hr_version then
-				Senpais.Functions.Replace.filesnames_in_layer( layer.hr_version, entity )
+Functions =
+{
+	Globals = function()
+		global.Register =
+		{
+			{ name = "Senpais-Electric-Train", multy = 2 },
+			{ name = "Senpais-Electric-Train-Heavy", multy = 5 },
+			{ name = "Elec-Battle-Loco-1", multy = 2 },
+			{ name = "Elec-Battle-Loco-2", multy = 4 },
+			{ name = "Elec-Battle-Loco-3", multy = 6 }
+		}
+		global.TrainsList = global.TrainsList or {}
+		global.AccuList = global.AccuList or {}
+		global.Lines = global.Lines or {}
+		global.ScheduleLines = global.ScheduleLines or {}
+		global.ScheduleLinesSignals = global.ScheduleLinesSignals or {}
+		global.TrainsID = global.TrainsID or {}
+		global.PlayerDATA = global.PlayerDATA or {}
+		global.Data = global.Data or { tc = 0, ac = 0, pn = 0, pp = 0, am = 0, pt = "W", pv = "kJ", aj = "MJ" }
+	end,
+	Players = function()
+		for _, p in pairs( game.players ) do
+			local m = mod_gui.get_button_flow( p )
+			if not m.SenpaisTrainsButton then
+				local b = Functions.AddSpriteButton( m, "SenpaisTrainsButton", "Senpais-S" )
+				b.style.visible = true
 			end
-		end 
-	end
-end
-
--- GUI
-
-function Senpais_Trains_MainGUI( player )
-	local A01 = Senpais_Trains_Add_Frame( mod_gui.get_frame_flow( player), "SenpaisGUI", "outer_frame" )
-	local A02 = Senpais_Trains_Add_Table( A01, "SenpaisGUITable01", 4 )
-	local A03 = { Senpais_Trains_Add_Frame( A02, "SenpaisGUIHiddenFrame01", "outer_frame" ),
-				  Senpais_Trains_Add_Frame( A02, "SenpaisGUIHiddenFrame02", "outer_frame" ),
-				  Senpais_Trains_Add_Frame( A02, "SenpaisGUIHiddenFrame03", "outer_frame" ),
-				  Senpais_Trains_Add_Frame( A02, "SenpaisGUIHiddenFrame04", "outer_frame" ) }
-	local A04 = Senpais_Trains_Add_Frame( A03[1], "SenpaisGUIFrame01" )
-	local A05 = { Senpais_Trains_Add_Sprite_Button( A04, "SenpaisCountTrainsButton", "Train-Count" ),
-				  Senpais_Trains_Add_Sprite_Button( A04, "SenpaisCountWagonsButton", "Wagon-Count" ),
-				  Senpais_Trains_Add_Sprite_Button( A04, "SenpaisCountFluidWagonsButton", "FluidWagon-Count" ) }
-	if settings.startup["Smarter-Trains"].value then
-		local A06 = Senpais_Trains_Add_Sprite_Button( A04, "SenpaisSmarterTrainsGUIMainButton", "Senpais-Smart-Stop-Icon" )
-	end
-	if settings.startup["Senpais-Power-Provider"].value then
-		local A07 = Senpais_Trains_Add_Sprite_Button( A04, "SenpaisElectricTrainsStatesButton", "item/Senpais-Power-Provider" )
-	end
-end
-
-function Senpais_Trains_DestroyChildren( children, number )
-	local count = number or 1
-	if #children > ( number - 1 ) then
-		for i = count, #children do
-			children[i].clear()
+			global.PlayerDATA[p.index] = { TrainsCount = {}, WagonsCount = {}, FluidWagonsCount = {}, EntityName = "", Entity = {} }
+			if p.gui.top.SenpaisSmartTrainMainButton then p.gui.top.SenpaisSmartTrainMainButton.destroy() end
+			if p.gui.left.SenpaisSmartTrainMainFrame01 then p.gui.left.SenpaisSmartTrainMainFrame01.destroy() end
 		end
-	end
-end
-
-function Senpais_Trains_SmarterTrainsGUIMain( parent )
-	local B01 = Senpais_Trains_Add_Frame( parent, "SenpaisSmarterTrainsGUIFrame01" )
-	local B02 = Senpais_Trains_Add_Table( B01, "SenpaisSmarterTrainsGUITable01", 4 )
-	local B03 = { Senpais_Trains_Add_Drop_Down( B02, "SenpaisSmarterTrainsGUIDropDown", global.SenpaisLines ),
-				  Senpais_Trains_Add_Choose_Elem_Button_Signal( B02, "SenpaisSmarterTrainsGUIElemButton01" ),
-				  Senpais_Trains_Add_Sprite_Button( B02, "SenpaisSmarterTrainsGUISpriteButton01", "Senpais-plus" ),
-				  Senpais_Trains_Add_Sprite_Button( B02, "SenpaisSmarterTrainsGUISpriteButton02", "utility/trash_bin" ) }
-end
-
-function Senpais_Trains_SmarterTrainsGUIMainList( parent )
-	if parent.children[2] then parent.children[2].destroy() end
-	local C01 = Senpais_Trains_Add_Scroll_Pane( parent, "SenpaisSmarterTrainsGUIScrollPane" )
-	C01.style.maximal_height = 300
-	local C02 = Senpais_Trains_Add_Frame( C01, "SenpaisSmarterTrainsGUIFrame02", "image_frame" )
-	C02.style.left_padding = 4
-	C02.style.right_padding = 8
-	C02.style.bottom_padding = 4
-	C02.style.top_padding = 4
-	local C03 = Senpais_Trains_Add_Table( C02, "SenpaisSmarterTrainsGUITable02", 2 )
-	C03.style.horizontal_spacing = 16
-	C03.style.vertical_spacing = 8
-	C03.style.column_alignments[2] = "right"
-	C03.draw_horizontal_line_after_headers = true
-	C03.draw_vertical_lines = true
-	local C04 = { Senpais_Trains_Add_Label( C03, "SenpaisSmarterTrainsGUILabels01", "Stations" ),
-				  Senpais_Trains_Add_Label( C03, "SenpaisSmarterTrainsGUILabels02", "Signals" ) }
-	for _, h in pairs( global.SenpaisScheduleLinesSignals[global.SenpaisLines[parent.children[1].children[1].selected_index]] ) do
-		local C05 = { Senpais_Trains_Add_Label( C03, "SenpaisSmarterTrainsGUILabels03_" .. h.station, h.station ),
-					  Senpais_Trains_Add_Choose_Elem_Button_Signal( C03, "SenpaisSmarterTrainsGUIElemButton02_" .. h.station, Senpais_Trains_Check( h.signal ) ) }
-	end
-end
-
-function Senpais_Trains_SmarterTrainsGUIAdd( parent )
-	local D01 = Senpais_Trains_Add_Frame( parent, "SenpaisSmarterTrainsGUIFrame03" )
-	local D02 = Senpais_Trains_Add_Table( D01, "SenpaisSmarterTrainsGUITable03", 2 )
-	local D03 = { Senpais_Trains_Add_Textfield( D02, "SenpaisSmarterTRainsGUITextfield" ),
-				  Senpais_Trains_Add_Choose_Elem_Button_Signal( D02, "SenpaisSmarterTrainsGUIElemButton03" ),
-				  Senpais_Trains_Add_Button( D01, "SenpaisSmarterTrainsGUIButton", "Add Linie" ) }
-end
-
-function Senpais_Trains_CountTrainsGUIMain( parent )
-	local E01 = Senpais_Trains_Add_Frame( parent, "SenpaisCountTrainsFrame01" )
-	local E02 = { Senpais_Trains_Add_Label( E01, "SenpaisCountTrainsLabel01", "Train Counter" ),
-				  Senpais_Trains_Add_Scroll_Pane( E01, "SenpaisCountTrainsScrollPane01" ) }
-	E02[2].style.maximal_height = 270
-	local E03 = Senpais_Trains_Add_Frame( E02[2], "SenpaisCountTrainsFrame02", "image_frame" )
-	E03.style.left_padding = 4
-	E03.style.right_padding = 8
-	E03.style.bottom_padding = 4
-	E03.style.top_padding = 4
-	local E04 = Senpais_Trains_Add_Table( E03, "SenpaisCountTrainsTable01", 3 )
-	E04.style.column_alignments[2] = "center"
-	E04.style.column_alignments[3] = "right"
-	E04.style.horizontal_spacing = 16
-	E04.style.vertical_spacing = 8
-	E04.draw_horizontal_line_after_headers = true
-	E04.draw_vertical_lines = true
-	local E05 = { Senpais_Trains_Add_Label( E04, "SenpaisCountTrainsLabel02", "Icon" ),
-				  Senpais_Trains_Add_Label( E04, "SenpaisCountTrainsLabel03", "Count" ),
-				  Senpais_Trains_Add_Label( E04, "SenpaisCountTrainsLabel04" ) }
-	global.PlayerDATA[game.players[parent.player_index].index].TrainsCount = {}
-	for _, entity in pairs( game.players[parent.player_index].surface.find_entities_filtered{ type = "locomotive" } ) do
-		found = false
-		for _, q in pairs( global.PlayerDATA[game.players[parent.player_index].index].TrainsCount ) do
-			if q.name == entity.name then
-				table.insert( q.entities, entity )
-				found = true
-				break
+	end,
+	DestroyChildren = function( p )
+		if #p > 1 then
+			for i = 2, #p do
+				p[i].clear()
 			end
 		end
-		if not found then
-			table.insert( global.PlayerDATA[game.players[parent.player_index].index].TrainsCount, { name = entity.name, entities = { entity } } )
+	end,
+	MainGui = function( p )
+		local A01 = Functions.AddFrame( p, "SenpaisTrainsMainGui", "outer_frame", nil )
+		local A02 = Functions.AddTable( A01, "SenpaisTrainsTable01", 4 )
+		local A03 =
+		{
+			Functions.AddFrame( A02, "SenpaisTrainsHiddenFrame01", "outer_frame", nil ),
+			Functions.AddFrame( A02, "SenpaisTrainsHiddenFrame02", "outer_frame", nil ),
+			Functions.AddFrame( A02, "SenpaisTrainsHiddenFrame03", "outer_frame", nil ),
+			Functions.AddFrame( A02, "SenpaisTrainsHiddenFrame04", "outer_frame", nil )
+		}
+		local A04 = Functions.AddFrame( A03[1], "SenpaisTrainsFrame01", nil, nil )
+		local A05 =
+		{
+			Functions.AddSpriteButton( A04, "SenpaisTrainsSpriteButton01", "Train-Count" ),
+			Functions.AddSpriteButton( A04, "SenpaisTrainsSpriteButton02", "Wagon-Count" ),
+			Functions.AddSpriteButton( A04, "SenpaisTrainsSpriteButton03", "FluidWagon-Count" )
+		}
+		if settings.startup["Smarter-Trains"].value then
+			local A06 = Functions.AddSpriteButton( A04, "SenpaisTrainsSpriteButton04", "Senpais-Smart-Stop-Icon" )
 		end
-	end
-	for _, t in pairs( global.PlayerDATA[game.players[parent.player_index].index].TrainsCount ) do
-		local E06 = { Senpais_Trains_Add_Sprite( E04, "SenpaisCountTrainsSprite_" .. t.name, "item/" .. t.name ),
-					  Senpais_Trains_Add_Label( E04, "SenpaisCountTrainsLabel05_" .. t.name, #t.entities ),
-					  Senpais_Trains_Add_Button( E04, "SenpaisCountTrainsButton01_" .. t.name, "List All" ) }
-	end
-end
-
-function Senpais_Trains_CountTrainsGUIList( parent, part )
-	global.PlayerDATA[game.players[parent.player_index].index].EntityName = part.name
-	local F01 = Senpais_Trains_Add_Frame( parent, "SenpaisCountTrainsFrame03" )
-	local F02 = { Senpais_Trains_Add_Label( F01, "SenpaisCountTrainsLabel04", "All placed Trains of this Type" ),
-				  Senpais_Trains_Add_Scroll_Pane( F01, "SenpaisCountTrainsScrollPane02" ) }
-	F02[2].style.maximal_height = 270
-	local F03 = Senpais_Trains_Add_Frame( F02[2], "SenpaisCountTrainsFrame04", "image_frame" )
-	F03.style.left_padding = 4
-	F03.style.right_padding = 8
-	F03.style.bottom_padding = 4
-	F03.style.top_padding = 4
-	local F04 = Senpais_Trains_Add_Table( F03, "SenpaisCountTrainsTable02", 5 )
-	F04.style.column_alignments[2] = "center"
-	F04.style.column_alignments[3] = "center"
-	F04.style.column_alignments[4] = "right"
-	F04.style.horizontal_spacing = 16
-	F04.style.vertical_spacing = 8
-	F04.draw_horizontal_line_after_headers = true
-	F04.draw_vertical_lines = true
-	local F05 = { Senpais_Trains_Add_Label( F04, "SenpaisCountTrainsLabel05", "Backer Name" ),
-				  Senpais_Trains_Add_Label( F04, "SenpaisCountTrainsLabel06", "Player Kills" ),
-				  Senpais_Trains_Add_Label( F04, "SenpaisCountTrainsLabel07", "Unique Train ID" ),
-				  Senpais_Trains_Add_Label( F04, "SenpaisCountTrainsLabel08", "Health" ),
-				  Senpais_Trains_Add_Label( F04, "SenpaisCountTrainsLabel09" ) }
-	for u = 1, #part.entities do
-		local F06 = { Senpais_Trains_Add_Frame( F04, "SenpaisCountTrainsFrame05_" .. part.name .. "_" .. u, "outer_frame" ),
-					  Senpais_Trains_Add_Frame( F04, "SenpaisCountTrainsFrame06_" .. part.name .. "_" .. u, "outer_frame" ),
-					  Senpais_Trains_Add_Frame( F04, "SenpaisCountTrainsFrame07_" .. part.name .. "_" .. u, "outer_frame" ),
-					  Senpais_Trains_Add_Frame( F04, "SenpaisCountTrainsFrame08_" .. part.name .. "_" .. u, "outer_frame" ),
-					  Senpais_Trains_Add_Frame( F04, "SenpaisCountTrainsFrame09_" .. part.name .. "_" .. u, "outer_frame" ) }
-		local F07 = Senpais_Trains_Add_Label( F06[1], "SenpaisCountTrainsLabel10_" .. part.name .. "_" .. u, part.entities[u].backer_name )
-		if #part.entities[u].train.killed_players > 0 then
-			for id, count in pairs( part.entities[u].train.killed_players ) do
-				local F08 = Senpais_Trains_Add_Label( F06[2], "SenpaisCountTrainsLabel11_" .. part.name .. "_" .. u, "- " .. game.players[id].name .. ": " .. count )
-			end
+		if settings.startup["Senpais-Power-Provider"].value then
+			local A07 = Functions.AddSpriteButton( A04, "SenpaisTrainsSpriteButton05", "item/Senpais-Power-Provider" )
 		end
-		local F09 ={  Senpais_Trains_Add_Label( F06[3], "SenpaisCountTrainsLabel12_" .. part.name .. "_" .. u, part.entities[u].train.id ),
-					  Senpais_Trains_Add_Label( F06[4], "SenpaisCountTrainsLabel13_" .. part.name .. "_" .. u, part.entities[u].health .. "/" .. part.entities[u].prototype.max_health ),
-					  Senpais_Trains_Add_Button( F06[5], "SenpaisCountTrainsButton02_" .. part.name .. "_" .. u, "Edit Train" ) }
-	end
-end
-
-function Senpais_Trains_CountTrainsGUIEntityEdit( parent, entity )
-	if parent.children[1] then parent.children[1].destroy() end
-	local G01 = Senpais_Trains_Add_Frame( parent, "SenpaisCountTrainsFrame10" )
-	local G02 = Senpais_Trains_Add_Textfield( G01, "SenpaisCountTrainsTextfield", entity.backer_name )
-	if settings.startup["Smarter-Trains"].value then
-		local G03 = { Senpais_Trains_Add_Drop_Down( G01, "SenpaisCountTrainsDropDown", global.SenpaisLines ),
-					  Senpais_Trains_Add_Scroll_Pane( G01, "SenpaisCountTrainsScrollPane02" ) }
-		G03[2].style.maximal_height = 300
-	end
-	local G04 = Senpais_Trains_Add_Button( G01, "SenpaisCountTrainsButton03", "Apply Changes" )
-end
-
-function Senpais_Trains_CountTrainsGUIEntityEditList( parent, index )
-	if parent.children[1] then parent.clear() end
-	local H01 = Senpais_Trains_Add_Frame( parent, "SenpaisCountTrainsFrame11", "image_frame" )
-	H01.style.left_padding = 4
-	H01.style.right_padding = 8
-	H01.style.bottom_padding = 4
-	H01.style.top_padding = 4
-	local H02 = Senpais_Trains_Add_Table( H01, "SenpaisCountTrainsTable03", 2 )
-	H02.style.horizontal_spacing = 16
-	H02.style.vertical_spacing = 8
-	H02.style.column_alignments[2] = "right"
-	H02.draw_horizontal_line_after_headers = true
-	H02.draw_vertical_lines = true
-	local H03 = { Senpais_Trains_Add_Label( H02, "SenpaisCountTrainsLabel14" ),
-				  Senpais_Trains_Add_Label( H02, "SenpaisCountTrainsLabel15", "Stations" ) }
-	for _, t in pairs( global.SenpaisScheduleLinesSignals[global.SenpaisLines[index]] ) do
-		local H04 = { Senpais_Trains_Add_RadioButton( H02, "SenpaisCountTrainsRadioButton_" .. t.station ),
-					  Senpais_Trains_Add_Label( H02, "SenpaisCountTrainsLabel16_" .. t.station, t.station ) }
-	end
-end
-
-function Senpais_Trains_CountWagonsGUIMain( parent )
-	local I01 = Senpais_Trains_Add_Frame( parent, "SenpaisCountWagonsFrame01" )
-	local I02 = { Senpais_Trains_Add_Label( I01, "SenpaisCountWagonsLabel01", "Wagon Counter" ),
-				  Senpais_Trains_Add_Scroll_Pane( I01, "SenpaisCountWagonsScrollPane01" ) }
-	I02[2].style.maximal_height = 270
-	local I03 = Senpais_Trains_Add_Frame( I02[2], "SenpaisCountWagonsFrame02", "image_frame" )
-	I03.style.left_padding = 4
-	I03.style.right_padding = 8
-	I03.style.bottom_padding = 4
-	I03.style.top_padding = 4
-	local I04 = Senpais_Trains_Add_Table( I03, "SenpaisCountWagonsTable01", 3 )
-	I04.style.column_alignments[2] = "center"
-	I04.style.column_alignments[3] = "right"
-	I04.style.horizontal_spacing = 16
-	I04.style.vertical_spacing = 8
-	I04.draw_horizontal_line_after_headers = true
-	I04.draw_vertical_lines = true
-	local I05 = { Senpais_Trains_Add_Label( I04, "SenpaisCountWagonsLabel02", "Icon" ),
-				  Senpais_Trains_Add_Label( I04, "SenpaisCountWagonsLabel03", "Count" ),
-				  Senpais_Trains_Add_Label( I04, "SenpaisCountWagonsLabel04" ) }
-	global.PlayerDATA[game.players[parent.player_index].index].WagonsCount = {}
-	for _, entity in pairs( game.players[parent.player_index].surface.find_entities_filtered{ type = "cargo-wagon" } ) do
-		found = false
-		for _, l in pairs( global.PlayerDATA[game.players[parent.player_index].index].WagonsCount ) do
-			if l.name == entity.name then
-				table.insert( l.entities, entity )
-				found = true
-				break
-			end
-		end
-		if not found then
-			table.insert( global.PlayerDATA[game.players[parent.player_index].index].WagonsCount, { name = entity.name, entities = { entity } } )
-		end
-	end
-	for _, x in pairs( global.PlayerDATA[game.players[parent.player_index].index].WagonsCount ) do
-		local I06 = { Senpais_Trains_Add_Sprite( I04, "SenpaisCountWagonsSprite01_" .. x.name, "item/" .. x.name ),
-					  Senpais_Trains_Add_Label( I04, "SenpaisCountWagonsLabel05_" .. x.name, #x.entities ),
-					  Senpais_Trains_Add_Button( I04, "SenpaisCountWagonsButton_" .. x.name, "List All" ) }
-	end
-end
-
-function Senpais_Trains_CountWagonsGUIList( parent, part )
-	local J01 = Senpais_Trains_Add_Frame( parent, "SenpaisCountWagonsFrame03" )
-	local J02 = { Senpais_Trains_Add_Label( J01, "SenpaisCountWagonsLabel06", "All placed Wagons of this Type" ),
-				  Senpais_Trains_Add_Scroll_Pane( J01, "SenpaisCountWagonsScrollPane02" ) }
-	J02[2].style.maximal_height = 270
-	local J03 = Senpais_Trains_Add_Frame( J02[2], "SenpaisCountWagonsFrame04", "image_frame" )
-	J03.style.left_padding = 4
-	J03.style.right_padding = 8
-	J03.style.bottom_padding = 4
-	J03.style.top_padding = 4
-	local J04 = Senpais_Trains_Add_Table( J03, "SenpaisCountWagonsTable02", 4 )
-	J04.style.column_alignments[2] = "center"
-	J04.style.column_alignments[4] = "center"
-	J04.style.horizontal_spacing = 16
-	J04.style.vertical_spacing = 8
-	J04.draw_horizontal_line_after_headers = true
-	J04.draw_vertical_lines = true
-	J04.draw_horizontal_lines = true
-	local J05 = { Senpais_Trains_Add_Frame( J04, "SenpaisCountWagonsFrame05", "outer_frame" ),
-				  Senpais_Trains_Add_Frame( J04, "SenpaisCountWagonsFrame06", "outer_frame" ),
-				  Senpais_Trains_Add_Frame( J04, "SenpaisCountWagonsFrame07", "outer_frame" ),
-				  Senpais_Trains_Add_Frame( J04, "SenpaisCountWagonsFrame08", "outer_frame" ) }
-	local J06 = { Senpais_Trains_Add_Label( J05[1], "SenpaisCountWagonsLabel07", "Health" ),
-				  Senpais_Trains_Add_Table( J05[2], "SenpaisCountWagonsTable03", 2 ),
-				  Senpais_Trains_Add_Label( J05[3], "SenpaisCountWagonsLabel08", "Health" ),
-				  Senpais_Trains_Add_Table( J05[4], "SenpaisCountWagonsTable04", 2 ) }
-	J06[2].style.column_alignments[2] = "right"
-	J06[2].style.horizontal_spacing = 16
-	J06[2].style.vertical_spacing = 8
-	J06[4].style.column_alignments[2] = "right"
-	J06[4].style.horizontal_spacing = 16
-	J06[4].style.vertical_spacing = 8
-	local J07 = { Senpais_Trains_Add_Label( J06[2], "SenpaisCountWagonsLabel09", "Icon" ),
-				  Senpais_Trains_Add_Label( J06[2], "SenpaisCountWagonsLabel10", "Load" ),
-				  Senpais_Trains_Add_Label( J06[4], "SenpaisCountWagonsLabel11", "Icon" ),
-				  Senpais_Trains_Add_Label( J06[4], "SenpaisCountWagonsLabel12", "Load" ) }
-	for f = 1, #part.entities do
-		local J08 = { Senpais_Trains_Add_Frame( J04, "SenpaisCountWagonsFrame09_" .. part.name .. "_" .. f, "outer_frame" ),
-					  Senpais_Trains_Add_Frame( J04, "SenpaisCountWagonsFrame10_" .. part.name .. "_" .. f, "outer_frame" ) }
-		local J09 ={ Senpais_Trains_Add_Label( J08[1], "SenpaisCountWagonsLabel13_" .. part.name .. "_" .. f, part.entities[f].health .. "/" .. part.entities[f].prototype.max_health ),
-					 Senpais_Trains_Add_Table( J08[2], "SenpaisCountWagonsTable05_" .. part.name .. "_" .. f, 2 ) }
-		J09[2].style.column_alignments[2] = "right"
-		J09[2].style.horizontal_spacing = 16
-		J09[2].style.vertical_spacing = 8
-		for name, count in pairs( part.entities[f].get_inventory( defines.inventory.cargo_wagon ).get_contents() ) do
-			local J10 = { Senpais_Trains_Add_Sprite( J09[2], "SenpaisCountWagonsSprite02_" .. part.name .. "_" .. f .. "_" .. name, "item/" .. name ),
-						  Senpais_Trains_Add_Label( J09[2], "SenpaisCountWagonsLabel14_" .. part.name .. "_" .. f .. "_" .. name, count ) }
-		end
-	end
-end
-
-function Senpais_Trains_CountFluidWagonsGUIMain( parent )
-	local K01 = Senpais_Trains_Add_Frame( parent, "SenpaisCountFluidWagonsFrame01" )
-	local K02 = { Senpais_Trains_Add_Label( K01, "SenpaisCountFluidWagonsLabel01", "Fluid Wagon Counter" ),
-				  Senpais_Trains_Add_Scroll_Pane( K01, "SenpaisCountFluidWagonsScrollPane01" ) }
-	K02[2].style.maximal_height = 270
-	local K03 = Senpais_Trains_Add_Frame( K02[2], "SenpaisCountFluidWagonsFrame02", "image_frame" )
-	K03.style.left_padding = 4
-	K03.style.right_padding = 8
-	K03.style.bottom_padding = 4
-	K03.style.top_padding = 4
-	local K04 = Senpais_Trains_Add_Table( K03, "SenpaisCountFluidWagonsTable01", 3 )
-	K04.style.column_alignments[2] = "center"
-	K04.style.column_alignments[3] = "right"
-	K04.style.horizontal_spacing = 16
-	K04.style.vertical_spacing = 8
-	K04.draw_horizontal_line_after_headers = true
-	K04.draw_vertical_lines = true
-	local K05 = { Senpais_Trains_Add_Label( K04, "SenpaisCountFluidWagonsLabel02", "Icon" ),
-				  Senpais_Trains_Add_Label( K04, "SenpaisCountFluidWagonsLabel03", "Count" ),
-				  Senpais_Trains_Add_Label( K04, "SenpaisCountFluidWagonsLabel04" ) }
-	global.PlayerDATA[game.players[parent.player_index].index].FluidWagonsCount = {}
-	for _, entity in pairs( game.players[parent.player_index].surface.find_entities_filtered{ type = "fluid-wagon" } ) do
-		found = false
-		for _, t in pairs( global.PlayerDATA[game.players[parent.player_index].index].FluidWagonsCount ) do
-			if t.name == entity.name then
-				table.insert( t.entities, entity )
-				found = true
-				break
-			end
-		end
-		if not found then
-			table.insert( global.PlayerDATA[game.players[parent.player_index].index].FluidWagonsCount, { name = entity.name, entities = { entity } } )
-		end
-	end
-	for _, b in pairs( global.PlayerDATA[game.players[parent.player_index].index].FluidWagonsCount ) do
-		local K06 = { Senpais_Trains_Add_Sprite( K04, "SenpaisCountFluidWagonsSprite01_" .. b.name, "item/" .. b.name ),
-					  Senpais_Trains_Add_Label( K04, "SenpaisCountFluidWagonsLabel05_" .. b.name, #b.entities ),
-					  Senpais_Trains_Add_Button( K04, "SenpaisCountFluidWagonsButton_" .. b.name, "List All" ) }
-	end
-end
-
-function Senpais_Trains_CountFluidWagonsGUIList( parent, part )
-	local L01 = Senpais_Trains_Add_Frame( parent, "SenpaisCountFluidWagonsFrame03" )
-	local L02 = { Senpais_Trains_Add_Label( L01, "SenpaisCountFluidWagonsLabel06", "All placed Fluid Wagons of this Type" ),
-				  Senpais_Trains_Add_Scroll_Pane( L01, "SenpaisCountFluidWagonsScrollPane02" ) }
-	L02[2].style.maximal_height = 270
-	local L03 = Senpais_Trains_Add_Frame( L02[2], "SenpaisCountFluidWagonsFrame04", "image_frame" )
-	L03.style.left_padding = 4
-	L03.style.right_padding = 8
-	L03.style.bottom_padding = 4
-	L03.style.top_padding = 4
-	local L04 = Senpais_Trains_Add_Table( L03, "SenpaisCountFluidWagonsTable02", 2 )
-	L04.style.column_alignments[2] = "right"
-	L04.style.horizontal_spacing = 16
-	L04.style.vertical_spacing = 8
-	L04.draw_horizontal_line_after_headers = true
-	L04.draw_vertical_lines = true
-	L04.draw_horizontal_lines = true
-	local L05 = { Senpais_Trains_Add_Label( L04, "SenpaisCountFluidWagonsLabel07", "Health" ),
-				  Senpais_Trains_Add_Frame( L04, "SenpaisCountFluidWagonsFrame05", "outer_frame" ) }
-	local L06 = Senpais_Trains_Add_Table( L05[2], "SenpaisCountFluidWagonsTable03", 2 )
-	L06.style.column_alignments[2] = "right"
-	L06.style.horizontal_spacing = 16
-	L06.style.vertical_spacing = 8
-	L06.draw_vertical_lines = true
-	local L07 = { Senpais_Trains_Add_Label( L06, "SenpaisCountFluidWagonsLabel08", "Fluid" ),
-				  Senpais_Trains_Add_Label( L06, "SenpaisCountFluidWagonsLabel09", "Load/Max" ) }
-	for r = 1, #part.entities do
-		local L08 = { Senpais_Trains_Add_Frame( L04, "SenpaisCountFluidWagonsFrame06_" .. part.name .. "_" .. r, "outer_frame" ),
-					  Senpais_Trains_Add_Frame( L04, "SenpaisCountFluidWagonsFrame07_" .. part.name .. "_" .. r, "outer_frame" ) }
-		local L09 = { Senpais_Trains_Add_Label( L08[1], "SenpaisCountFluidWagonsLabel10_" .. part.name .. "_" .. r, part.entities[r].health .. "/" .. part.entities[r].prototype.max_health ),
-					  Senpais_Trains_Add_Table( L08[2], "SenpaisCountFluidWagonsTable04_" .. part.name .. "_" .. r, 2 ) }
-		L09[2].style.column_alignments[2] = "right"
-		L09[2].draw_vertical_lines = true
-		local fluid = part.entities[r].fluidbox
-		local hasfluid = false
-		for m = 1, #fluid do
-			if fluid[m] ~= nil then
-				local L10 = { Senpais_Trains_Add_Sprite( L09[2], "SenpaisCountFluidWagonsSprite02_" .. part.name .. "_" .. r .. "_" .. fluid[m].name, "fluid/" .. fluid[m].name ),
-							  Senpais_Trains_Add_Progressbar( L09[2], "SenpaisCountFluidWagonsProgressbar _" .. part.name .. "_" .. r .. "_" .. fluid[m].name, part.entities[r].prototype.fluid_capacity, fluid[m].amount / part.entities[r].prototype.fluid_capacity ) }
-				L10[2].style.color = game.fluid_prototypes[fluid[m].name].base_color
-				hasfluid = true
-			end
-		end
-		if not hasfluid then
-			local L10 = Senpais_Trains_Add_Label( L08[2], "SenpaisCountFluidWagonsLabel11_" .. part.name .. "_" .. r, "No Fluid/s loaded" )
-		end
-	end
-end
-
-function Senpais_Trains_ElectricTrainsStatesGUIMain( parent )
-	local PowerNeeded = 0
-	local PowerProvided = 0
-	local PowerTrains = "W"
-	local PowerProvider = "kJ"
-	for _, y in pairs( global.SenpaisTrainsList ) do
-		PowerNeeded = PowerNeeded + ( y.multi * 600 )
-	end
-	if PowerNeeded > 1000 then
-		PowerNeeded = PowerNeeded / 1000
-		PowerTrains = "MW"
-		if PowerNeeded > 1000 then
-			PowerNeeded = PowerNeeded / 1000
-			PowerTrains = "GW"
-		end
-	end
-	for _, c in pairs( global.SenpaisAccuList ) do
-		PowerProvided = PowerProvided + c.energy
-	end
-	if PowerProvided > 1000 then
-		PowerProvided = Senpais_Trains_Round( PowerProvided / 1000, 2 )
-		PowerProvider = "KJ"
-		if PowerProvided > 1000 then
-			PowerProvided = Senpais_Trains_Round( PowerProvided / 1000, 2 )
-			PowerProvider = "MJ"
-			if PowerProvided > 1000 then
-				PowerProvided = Senpais_Trains_Round( PowerProvided / 1000, 2 )
-				PowerProvider = "GJ"
-				if PowerProvided > 1000 then
-					PowerProvided = Senpais_Trains_Round( PowerProvided / 1000, 2 )
-					PowerProvider = "TJ"
+	end,
+	CountTrainsMain = function( p )
+		local B01 = Functions.AddFrame( p, "SenpaisTrainsFrame02", nil, "Train Counter" )
+		local B02 = Functions.AddScrollPane( B01, "SenpaisTrainsScrollPane01" )
+		B02.style.maximal_height = 270
+		local B03 = Functions.AddFrame( B02, "SenpaisTrainsFrame03", "image_frame", nil )
+		B03.style.left_padding = 4
+		B03.style.right_padding = 8
+		B03.style.bottom_padding = 4
+		B03.style.top_padding = 4
+		local B04 = Functions.AddTable( B03, "SenpaisTrainsTable02", 3 )
+		B04.style.column_alignments[2] = "center"
+		B04.style.column_alignments[3] = "right"
+		B04.style.horizontal_spacing = 16
+		B04.style.vertical_spacing = 8
+		B04.draw_horizontal_line_after_headers = true
+		B04.draw_vertical_lines = true
+		local B05 =
+		{
+			Functions.AddLabel( B04, "SenpaisTrainsLabel01", "Icon" ),
+			Functions.AddLabel( B04, "SenpaisTrainsLabel02", "Count" ),
+			Functions.AddLabel( B04, nil, "" )
+		}
+		local player = game.players[p.player_index]
+		global.PlayerDATA[player.index].TrainsCount = {}
+		for _, e in pairs( player.surface.find_entities_filtered{ type = "locomotive" } ) do
+			found = false
+			for _, t in pairs( global.PlayerDATA[player.index].TrainsCount ) do
+				if t.name == e.name then
+					table.insert( t.entities, e )
+					found = true
+					break
 				end
 			end
-		end
-	end
-	local AccuMaxCapa = 25 * #global.SenpaisAccuList
-	local AccuMaxCapaJoule = "MJ"
-	if AccuMaxCapa > 1000 then
-		AccuMaxCapa = AccuMaxCapa / 1000
-		AccuMaxCapaJoule = "GJ"
-		if AccuMaxCapa > 1000 then
-			AccuMaxCapa = AccuMaxCapa / 1000
-			AccuMaxCapaJoule = "TJ"
-		end
-	end
-	local M01 = Senpais_Trains_Add_Frame( parent, "SenpaisElectricTrainsStatesFrame01", "frame_in_right_container" )
-	local M02 = { Senpais_Trains_Add_Label( M01, "SenpaisElectricTrainsStatesLabel01", "Electric Trains States" ),
-				  Senpais_Trains_Add_Flow( M01, "SenpaisElectricTrainsStatesFlow01", "vertical", "description_vertical_flow" ),
-				  Senpais_Trains_Add_Flow( M01, "SenpaisElectricTrainsStatesFlow02", "vertical", "description_vertical_flow" ),
-				  Senpais_Trains_Add_Flow( M01, "SenpaisElectricTrainsStatesFlow03", "vertical", "description_vertical_flow" ),
-				  Senpais_Trains_Add_Flow( M01, "SenpaisElectricTrainsStatesFlow04", "vertical", "description_vertical_flow" ),
-				  Senpais_Trains_Add_Flow( M01, "SenpaisElectricTrainsStatesFlow05", "vertical", "description_vertical_flow" ),
-				  Senpais_Trains_Add_Progressbar( M01, "SenpaisElectricTrainsStatesProgressbar", AccuMaxCapa, PowerProvided / AccuMaxCapa ) }
-	M02[1].style = "description_title_label"
-	M02[7].style = "electric_satisfaction_progressbar"
-	local M03 = { Senpais_Trains_Add_Table( M02[2], "SenpaisElectricTrainsStatesTable01", 2 ),
-				  Senpais_Trains_Add_Table( M02[3], "SenpaisElectricTrainsStatesTable02", 2 ),
-				  Senpais_Trains_Add_Table( M02[4], "SenpaisElectricTrainsStatesTable03", 2 ),
-				  Senpais_Trains_Add_Table( M02[5], "SenpaisElectricTrainsStatesTable04", 2 ),
-				  Senpais_Trains_Add_Table( M02[6], "SenpaisElectricTrainsStatesTable05", 2 ) }
-	local M04 = { Senpais_Trains_Add_Label( M03[1], "SenpaisElectricTrainsStatesLabel02", "Total Provider:" ),
-				  Senpais_Trains_Add_Label( M03[1], "SenpaisElectricTrainsStatesLabel03", #global.SenpaisAccuList ),
-				  Senpais_Trains_Add_Label( M03[2], "SenpaisElectricTrainsStatesLabel04", "Total Electric Trains:" ),
-				  Senpais_Trains_Add_Label( M03[2], "SenpaisElectricTrainsStatesLabel05", #global.SenpaisTrainsList ),
-				  Senpais_Trains_Add_Label( M03[3], "SenpaisElectricTrainsStatesLabel06", "Total Power Needed for Trains:" ),
-				  Senpais_Trains_Add_Label( M03[3], "SenpaisElectricTrainsStatesLabel07", PowerNeeded .. PowerTrains ),
-				  Senpais_Trains_Add_Label( M03[4], "SenpaisElectricTrainsStatesLabel08", "Total Power in Provider:" ),
-				  Senpais_Trains_Add_Label( M03[4], "SenpaisElectricTrainsStatesLabel09", PowerProvided .. PowerProvider ),
-				  Senpais_Trains_Add_Label( M03[5], "SenpaisElectricTrainsStatesLabel10", "Total Power Provider can Store:" ),
-				  Senpais_Trains_Add_Label( M03[5], "SenpaisElectricTrainsStatesLabel11", AccuMaxCapa .. AccuMaxCapaJoule ) }
-	M04[1].style = "description_label"
-	M04[2].style = "description_value_label"
-	M04[3].style = "description_label"
-	M04[4].style = "description_value_label"
-	M04[5].style = "description_label"
-	M04[6].style = "description_value_label"
-	M04[7].style = "description_label"
-	M04[8].style = "description_value_label"
-	M04[9].style = "description_label"
-	M04[10].style = "description_value_label"
-end
-
--- GUI Elements
-
-function Senpais_Trains_Add_Sprite_Button( flow, name, sprite, style )
-	return flow.add{ type = "sprite-button", name = name, style = style or nil, sprite = sprite }
-end
-
-function Senpais_Trains_Add_Frame( flow, name, style )
-	return flow.add{ type = "frame", name = name, direction = "vertical", style = style or nil }
-end
-
-function Senpais_Trains_Add_Table( flow, name, column_count )
-	return flow.add{ type = "table", name = name, column_count = column_count }
-end
-
-function Senpais_Trains_Add_Drop_Down( flow, name, items )
-	return flow.add{ type = "drop-down", name = name, items = items or nil }
-end
-
-function Senpais_Trains_Add_Choose_Elem_Button_Signal( flow, name, signal )
-	return flow.add{ type = "choose-elem-button", name = name, elem_type = "signal", signal = signal or nil }
-end
-
-function Senpais_Trains_Add_Textfield( flow, name, text )
-	return flow.add{ type = "textfield", name = name, text = text or nil }
-end
-
-function Senpais_Trains_Add_Button( flow, name, caption )
-	return flow.add{ type = "button", name = name, caption = caption or nil }
-end
-
-function Senpais_Trains_Add_Scroll_Pane( flow, name )
-	return flow.add{ type = "scroll-pane", name = name }
-end
-
-function Senpais_Trains_Add_Sprite( flow, name, sprite )
-	return flow.add{ type = "sprite", name = name, sprite = sprite }
-end
-
-function Senpais_Trains_Add_Label( flow, name, caption )
-	return flow.add{ type = "label", name = name, caption = caption or nil }
-end
-
-function Senpais_Trains_Add_RadioButton( flow, name, state )
-	return flow.add{ type = "radiobutton", name = name, state = state or false }
-end
-
-function Senpais_Trains_Add_Progressbar( flow, name, size, value )
-	return flow.add{ type = "progressbar", name = name, size = size, value = value or nil }
-end
-
-function Senpais_Trains_Add_Flow( flow, name, direction, style )
-	return flow.add{ type = "flow", name = name, direction = direction, style = style or nil }
-end
-
--- Script
-
-function Senpais_Trains_globals()
-	global.Register = { { name = "Senpais-Electric-Train", multy = 2 }, { name = "Senpais-Electric-Train-Heavy", multy = 5 }, { name = "Elec-Battle-Loco-1", multy = 2 },
-						{ name = "Elec-Battle-Loco-2", multy = 4 }, { name = "Elec-Battle-Loco-3", multy = 6 } }
-	global.SenpaisTrainsList = global.SenpaisTrainsList or {}
-	global.SenpaisAccuList = global.SenpaisAccuList or {}
-	global.SenpaisLines = global.SenpaisLines or {}
-	global.SenpaisScheduleLines = global.SenpaisScheduleLines or {}
-	global.SenpaisScheduleLinesSignals = global.SenpaisScheduleLinesSignals or {}
-	global.SenpaisTrainSchedulebyID = global.SenpaisTrainSchedulebyID or {}
-	global.PlayerDATA = global.PlayerDATA or {}
-end
-
-function Senpais_Trains_Players()
-	for _, p in pairs( game.players ) do
-		if not mod_gui.get_button_flow( p ).SenpaisGUIButton then
-			local button = Senpais_Trains_Add_Sprite_Button( mod_gui.get_button_flow( p ), "SenpaisGUIButton", "Senpais-S" )
-			button.style.visible = true
-		end
-		global.PlayerDATA[p.index] = global.PlayerDATA[p.index] or { TrainsCount = {}, WagonsCount = {}, FluidWagonsCount = {}, EntityName = {}, EntityCount = {} }
-		if p.gui.top.SenpaisSmartTrainMainButton then p.gui.top.SenpaisSmartTrainMainButton.destroy() end
-		if p.gui.left.SenpaisSmartTrainMainFrame01 then p.gui.left.SenpaisSmartTrainMainFrame01.destroy() end
-	end
-end
-
-function Senpais_Trains_OnBuild( event )
-	local entity = event.created_entity
-	if entity.name == "Senpais-Power-Provider" then
-		table.insert( global.SenpaisAccuList, entity )
-	end
-	if entity.type == "locomotive" then
-		for _, j in pairs( global.Register ) do
-			if entity.name == j.name then
-				table.insert( global.SenpaisTrainsList, { multi = j.multy, entity = entity } )
-				break
+			if not found then
+				table.insert( global.PlayerDATA[player.index].TrainsCount, { name = e.name, entities = { e } } )
 			end
 		end
-	end
-end
-
-function Senpais_Trains_OnRemove( event )
-	local entity = event.entity
-	if entity.name == "Senpais-Power-Provider" and global.SenpaisAccuList ~= nil then
-		for index, l in pairs( global.SenpaisAccuList ) do
-			if entity == l then
-				global.SenpaisAccuList[index] = nil
-				break
+		for _, t in pairs( global.PlayerDATA[player.index].TrainsCount ) do
+			local n = t.name
+			local B06 =
+			{
+				Functions.AddSprite( B04, "SenpaisTrainsSprite01_" .. n, "item/" .. n ),
+				Functions.AddLabel( B04, "SenpaisTrainsLabel03_" .. n, #t.entities ),
+				Functions.AddButton( B04, "SenpaisTrainsButton01_" .. n, "List All" )
+			}
+			local z = game.entity_prototypes[n] or game.tile_prototypes[n] or game.equipment_prototypes[n] or game.item_prototypes[n]
+			B06[1].tooltip = z.localised_name
+		end
+	end,
+	CountTrainsList = function( p, t )
+		global.PlayerDATA[game.players[p.player_index].index].EntityName = t.name
+		local C01 = Functions.AddFrame( p, "SenpaisTrainsFrame04", nil, "All placed Trains of this Type" )
+		local C02 = Functions.AddScrollPane( C01, "SenpaisTrainsScrollPane02" )
+		C02.style.maximal_height = 270
+		local C03 = Functions.AddFrame( C02, "SenpaisTrainsFrame05", "image_frame", nil )
+		C03.style.left_padding = 4
+		C03.style.right_padding = 8
+		C03.style.bottom_padding = 4
+		C03.style.top_padding = 4
+		local C04 = Functions.AddTable( C03, "SenpaisTrainsTable03", 5 )
+		C04.style.column_alignments[2] = "center"
+		C04.style.column_alignments[3] = "center"
+		C04.style.column_alignments[4] = "right"
+		C04.style.horizontal_spacing = 16
+		C04.style.vertical_spacing = 8
+		C04.draw_horizontal_line_after_headers = true
+		C04.draw_vertical_lines = true
+		local C05 =
+		{
+			Functions.AddLabel( C04, "SenpaisTrainsLabel04", "Backer Name" ),
+			Functions.AddLabel( C04, "SenpaisTrainsLabel05", "Player Kills" ),
+			Functions.AddLabel( C04, "SenpaisTrainsLabel06", "Unique Train ID" ),
+			Functions.AddLabel( C04, "SenpaisTrainsLabel07", "Health" ),
+			Functions.AddLabel( C04, nil, "" )
+		}
+		for u = 1, #t.entities do
+			local e = t.entities[u]
+			local C06 =
+			{
+				Functions.AddFrame( C04, "SenpaisTrainsFrame06_" .. u, "outer_frame", nil ),
+				Functions.AddFrame( C04, "SenpaisTrainsFrame07_" .. u, "outer_frame", nil ),
+				Functions.AddFrame( C04, "SenpaisTrainsFrame08_" .. u, "outer_frame", nil ),
+				Functions.AddFrame( C04, "SenpaisTrainsFrame09_" .. u, "outer_frame", nil ),
+				Functions.AddFrame( C04, "SenpaisTrainsFrame10_" .. u, "outer_frame", nil )
+			}
+			local C07 = Functions.AddLabel( C06[1], "SenpaisTrainsLabel08_" .. u, e.backer_name )
+			if #e.train.killed_players > 0 then
+				for i, c in pairs( e.train.killed_players ) do
+					local C08 = Functions.AddLabel( C06[2], "SenpaisTrainsLabel09_" .. u .. "_" .. i, "- " .. game.players[i].name .. ": " .. c )
+				end
+			end
+			local C09 =
+			{
+				Functions.AddLabel( C06[3], "SenpaisTrainsLabel10_" .. u, e.train.id ),
+				Functions.AddLabel( C06[4], "SenpaisTrainsLabel11_" .. u, e.health .. "/" .. e.prototype.max_health ),
+				Functions.AddButton( C06[5], "SenpaisTrainsButton02_" .. u, "Edit Train" )
+			}
+		end
+	end,
+	CountTrainsEntityEdit = function( p, b )
+		local D01 = Functions.AddFrame( p, "SenpaisTrainsFrame11", nil, nil )
+		local D02 = Functions.AddTexfield( D01, "SenpaisTrainsTextfield01", b )
+		if settings.startup["Smarter-Trains"].value then
+			local D03 =
+			{
+				Functions.AddDropDown( D01, "SenpaisTrainsDropDown01", global.SenpaisLines ),
+				Functions.AddScrollPane( D01, "SenpaisTrainsScrollPane03" )
+			}
+			D03[2].style.maximal_height = 300
+		end
+		local D04 = Functions.AddButton( D01, "SenpaisTrainsButton03", "Apply Changes" )
+	end,
+	CountTrainsEntityEditList = function( p, i )
+		local E01 = Functions.AddFrame( p, "SenpaisTrainsFrame12", "image_frame", nil )
+		E01.style.left_padding = 4
+		E01.style.right_padding = 8
+		E01.style.bottom_padding = 4
+		E01.style.top_padding = 4
+		local E02 = Functions.AddTable( E01, "SenpaisTrainsTable04", 2 )
+		E02.style.horizontal_spacing = 16
+		E02.style.vertical_spacing = 8
+		E02.style.column_alignments[2] = "right"
+		E02.draw_horizontal_line_after_headers = true
+		E02.draw_vertical_lines = true
+		local E03 =
+		{
+			Functions.AddLabel( E02, nil, "" ),
+			Functions.AddLabel( E02, "SenpaisTrainsLabel12", "Stations" )
+		}
+		for _, s in pairs( global.ScheduleLinesSignals[global.Lines[i]] ) do
+			local y = s.station
+			local E04 =
+			{
+				Functions.AddRadioButton( E02, "SenpaisTrainsRadioButton01_" .. y ),
+				Functions.AddLabel( E02, "SenpaisTrainsLabel13_" .. y, y )
+			}
+		end
+	end,
+	CountWagonsMain = function( p )
+		local F01 = Functions.AddFrame( p, "SenpaisTrainsFrame13", nil, "Wagon Counter" )
+		local F02 = Functions.AddScrollPane( F01, "SenpaisTrainsScrollPane04" )
+		F02.style.maximal_height = 270
+		local F03 = Functions.AddFrame( F02, "SenpaisTrainsFrame14", "image_frame", nil )
+		F03.style.left_padding = 4
+		F03.style.right_padding = 8
+		F03.style.bottom_padding = 4
+		F03.style.top_padding = 4
+		local F04 = Functions.AddTable( F03, "SenpaisTrainsTable05", 3 )
+		F04.style.column_alignments[2] = "center"
+		F04.style.column_alignments[3] = "right"
+		F04.style.horizontal_spacing = 16
+		F04.style.vertical_spacing = 8
+		F04.draw_horizontal_line_after_headers = true
+		F04.draw_vertical_lines = true
+		local F05 =
+		{
+			Functions.AddLabel( F04, "SenpaisTrainsLabel14", "Icon" ),
+			Functions.AddLabel( F04, "SenpaisTrainsLabel15", "Count" ),
+			Functions.AddLabel( F04, nil, "" )
+		}
+		local player = game.players[p.player_index]
+		global.PlayerDATA[player.index].WagonsCount = {}
+		for _, e in pairs( player.surface.find_entities_filtered{ type = "cargo-wagon" } ) do
+			found = false
+			for _, w in pairs( global.PlayerDATA[player.index].WagonsCount ) do
+				if w.name == e.name then
+					table.insert( w.entities, e )
+					found = true
+					break
+				end
+			end
+			if not found then
+				table.insert( global.PlayerDATA[player.index].WagonsCount, { name = e.name, entities = { e } } )
 			end
 		end
-	end
-	if entity.type == "locomotive" and global.SenpaisTrainsList ~= nil then
-		for index, l in pairs( global.SenpaisTrainsList ) do
-			if entity == l.entity then
-				global.SenpaisTrainsList[index] = nil
-				break
+		for _, w in pairs( global.PlayerDATA[player.index].WagonsCount ) do
+			local n = w.name
+			local F06 =
+			{
+				Functions.AddSprite( F04, "SenpaisTrainsSprite02_" .. n, "item/" .. n ),
+				Functions.AddLabel( F04, "SenpaisTrainsLabel16_" .. n, #w.entities ),
+				Functions.AddButton( F04, "SenpaisTrainsButton04_" .. n, "List All" )
+			}
+			local z = game.entity_prototypes[n] or game.tile_prototypes[n] or game.equipment_prototypes[n] or game.item_prototypes[n]
+			F06[1].tooltip = z.localised_name
+		end
+	end,
+	CountWagonsList = function( p, t )
+		local G01 = Functions.AddFrame( p, "SenpaisTrainsFrame15", nil, "All placed Wagons of this Type" )
+		local G02 = Functions.AddScrollPane( G01, "SenpaisTrainsScrollPane05" )
+		G02.style.maximal_height = 270
+		local G03 = Functions.AddFrame( G02, "SenpaisTrainsFrame16", "image_frame", nil )
+		G03.style.left_padding = 4
+		G03.style.right_padding = 8
+		G03.style.bottom_padding = 4
+		G03.style.top_padding = 4
+		local G04 = Functions.AddTable( G03, "SenpaisTrainsTable06", 4 )
+		G04.style.column_alignments[2] = "center"
+		G04.style.column_alignments[4] = "center"
+		G04.style.horizontal_spacing = 16
+		G04.style.vertical_spacing = 8
+		G04.draw_horizontal_line_after_headers = true
+		G04.draw_vertical_lines = true
+		G04.draw_horizontal_lines = true
+		local G05 =
+		{
+			Functions.AddFrame( G04, "SenpaisTrainsFrame17", "outer_frame", nil ),
+			Functions.AddFrame( G04, "SenpaisTrainsFrame18", "outer_frame", nil ),
+			Functions.AddFrame( G04, "SenpaisTrainsFrame19", "outer_frame", nil ),
+			Functions.AddFrame( G04, "SenpaisTrainsFrame20", "outer_frame", nil )
+		}
+		local G06 =
+		{
+			Functions.AddLabel( G05[1], "SenpaisTrainsLabel17", "Health" ),
+			Functions.AddTable( G05[2], "SenpaisTrainsTable07", 2 ),
+			Functions.AddLabel( G05[3], "SenpaisTrainsLabel18", "Health" ),
+			Functions.AddTable( G05[4], "SenpaisTrainsTable08", 2 ),
+		}
+		G06[2].style.column_alignments[2] = "right"
+		G06[2].style.horizontal_spacing = 16
+		G06[2].style.vertical_spacing = 8
+		G06[4].style.column_alignments[2] = "right"
+		G06[4].style.horizontal_spacing = 16
+		G06[4].style.vertical_spacing = 8
+		local G07 =
+		{
+			Functions.AddLabel( G06[2], "SenpaisTrainsLabel19", "Icon" ),
+			Functions.AddLabel( G06[2], "SenpaisTrainsLabel20", "Load" ),
+			Functions.AddLabel( G06[4], "SenpaisTrainsLabel21", "Icon" ),
+			Functions.AddLabel( G06[4], "SenpaisTrainsLabel22", "Load" )
+		}
+		for u = 1, #t.entities do
+			local e = t.entities[u]
+			local G08 =
+			{
+				Functions.AddFrame( G04, "SenpaisTrainsFrame21_" .. u, "outer_frame", nil ),
+				Functions.AddFrame( G04, "SenpaisTrainsFrame22_" .. u, "outer_frame", nil )
+			}
+			local G09 =
+			{
+				Functions.AddLabel( G08[1], "SenpaisTrainsLabel23_" .. u, e.health .. "/" .. e.prototype.max_health ),
+				Functions.AddTable( G08[2], "SenpaisTrainsTable09_" .. u, 2 )
+			}
+			G09[2].style.column_alignments[2] = "right"
+			G09[2].style.horizontal_spacing = 16
+			G09[2].style.vertical_spacing = 8
+			for n, c in pairs( e.get_inventory( defines.inventory.cargo_wagon ).get_contents() ) do
+				local G10 =
+				{
+					Functions.AddSprite( G09[2], "SenpaisTrainsSprite03_" .. u .. "_" .. n, "item/" .. n ),
+					Functions.AddLabel( G09[2], "SenpaisTrainsLabel24_" .. u .. "_" .. n, c )
+				}
+				local z = game.entity_prototypes[n] or game.tile_prototypes[n] or game.equipment_prototypes[n] or game.item_prototypes[n]
+				G09[1].tooltip = z.localised_name
 			end
 		end
-	end
-	if entity.train and global.SenpaisTrainSchedulebyID[entity.train.id] then
-		global.SenpaisTrainSchedulebyID[entity.train.id] = nil
-	end
-end
-
--- Coupling
-
-function Senpais_Trains_GetSignal( entity, signal )
-	local red = entity.get_circuit_network( defines.wire_type.red )
-	local green = entity.get_circuit_network( defines.wire_type.green )
-	local value = 0
-	if red then
-		value = red.get_signal( signal )
-	end
-	if green then
-		value = value + green.get_signal( signal )
-	end
-	if value == 0 then
-		return nil
-	else
-		return value
-	end
-end
-
-function Senpais_Trains_OrientationMatch( orient1, orient2 )
-	return math.abs( orient1 - orient2 ) < 0.25 or math.abs( orient1 - orient2 ) > 0.75
-end
-
-function Senpais_Trains_GetOrientation( entity, target )
-	local x = target.position.x - entity.position.x
-	local y = target.position.y - entity.position.y
-	return ( math.atan2( y, x ) / 2 / math.pi + 0.25 ) % 1
-end
-
-function Senpais_Trains_GetTileDistance( pos_a, pos_b )
-	return math.abs( pos_a.x - pos_b.x ) + math.abs( pos_a.y - pos_b.y )
-end
-
-function Senpais_Trains_SwapRailDir( raildir )
-	if raildir == defines.rail_direction.front then
-		return defines.rail_direction.back
-	else
-		return defines.rail_direction.front
-	end
-end
-
-function Senpais_Trains_GetRealFront( train, station )
-	if Senpais_Trains_GetTileDistance( train.front_stock.position, station.position ) < Senpais_Trains_GetTileDistance( train.back_stock.position, station.position ) then
-		return train.front_stock
-	else
-		return train.back_stock
-	end
-end
-
-function Senpais_Trains_GetRealBack( train, station )
-	if Senpais_Trains_GetTileDistance( train.front_stock.position, station.position ) < Senpais_Trains_GetTileDistance( train.back_stock.position, station.position ) then
-		return train.back_stock
-	else
-		return train.front_stock
-	end
-end
-
-function Senpais_Trains_AttemptCouple( train, count, station )
-	if count then
-		local direction = defines.rail_direction.front
-		if count < 0 then
-			direction = defines.rail_direction.back
+	end,
+	CountFluidWagonsMain = function( p )
+		local H01 = Functions.AddFrame( p, "SenpaisTrainsFrame23", nil, "Fluid Wagon Counter" )
+		local H02 = Functions.AddScrollPane( H01, "SenpaisTrainsScrollPane06" )
+		H02.style.maximal_height = 270
+		local H03 = Functions.AddFrame( H02, "SenpaisTrainsFrame24", "image_frame", nil )
+		H03.style.left_padding = 4
+		H03.style.right_padding = 8
+		H03.style.bottom_padding = 4
+		H03.style.top_padding = 4
+		local H04 = Functions.AddTable( H03, "SenpaisTrainsTable10", 3 )
+		H04.style.column_alignments[2] = "center"
+		H04.style.column_alignments[3] = "right"
+		H04.style.horizontal_spacing = 16
+		H04.style.vertical_spacing = 8
+		H04.draw_horizontal_line_after_headers = true
+		H04.draw_vertical_lines = true
+		local H05 =
+		{
+			Functions.AddLabel(  H04, "SenpaisTrainsLabel25", "Icon" ),
+			Functions.AddLabel(  H04, "SenpaisTrainsLabel26", "Count" ),
+			Functions.AddLabel(  H04, nil, "" ),
+		}
+		local player = game.players[p.player_index]
+		global.PlayerDATA[player.index].FluidWagonsCount = {}
+		for _, e in pairs( player.surface.find_entities_filtered{ type = "fluid-wagon" } ) do
+			found = false
+			for _, f in pairs( global.PlayerDATA[player.index].FluidWagonsCount ) do
+				if f.name == e.name then
+					table.insert( f.entities, e )
+					found = true
+					break
+				end
+			end
+			if not found then
+				table.insert( global.PlayerDATA[player.index].FluidWagonsCount, { name = e.name, entities = { e } } )
+			end
 		end
-		local front = Senpais_Trains_GetRealFront( train, station )
-		if not Senpais_Trains_OrientationMatch( front.orientation, station.orientation ) then
-			direction = Senpais_Trains_SwapRailDir( direction )
+		for _, f in pairs( global.PlayerDATA[player.index].FluidWagonsCount ) do
+			local n = f.name
+			local H06 =
+			{
+				Functions.AddSprite( H04, "SenpaisTrainsSprite04_" .. n, "item/" .. n ),
+				Functions.AddLabel( H04, "SenpaisTrainsLabel27_" .. n, #f.entities ),
+				Functions.AddButton( H04, "SenpaisTrainsButton05_" .. n, "List All" )
+			}
+			local z = game.entity_prototypes[n] or game.tile_prototypes[n] or game.equipment_prototypes[n] or game.item_prototypes[n]
+			H06[1].tooltip = z.localised_name
 		end
-		if front.connect_rolling_stock( direction ) then
-			return front
+	end,
+	CountFluidWagonsList = function( p, t )
+		local I01 = Functions.AddFrame( p, "SenpaisTrainsFrame25", nil, "All placed Fluid Wagons of this Type" )
+		local I02 = Functions.AddScrollPane( I01, "SenpaisTrainsScrollPane07" )
+		I02.style.maximal_height = 270
+		local I03 = Functions.AddFrame( I02, "SenpaisTrainsFrame26", "image_frame", nil )
+		I03.style.left_padding = 4
+		I03.style.right_padding = 8
+		I03.style.bottom_padding = 4
+		I03.style.top_padding = 4
+		local I04 = Functions.AddTable( I03, "SenpaisTrainsTable11", 2 )
+		I04.style.horizontal_spacing = 16
+		I04.style.vertical_spacing = 8
+		I04.draw_horizontal_line_after_headers = true
+		I04.draw_vertical_lines = true
+		I04.draw_horizontal_lines = true
+		local I05 =
+		{
+			Functions.AddLabel( I04, "SenpaisTrainsLabel28", "Health" ),
+			Functions.AddLabel( I04, "SenpaisTrainsLabel29", "Fluid with Load/Max" ),
+		}
+		for u = 1, #t.entities do
+			local e = t.entities[u]
+			local I06 =
+			{
+				Functions.AddLabel( I04, "SenpaisTrainsLabel30_" .. u, e.health .. "/" .. e.prototype.max_health ),
+				Functions.AddFlow( I04, "SenpaisTrainsFlow01_" .. u, "description_vertical_flow" )
+			}
+			local I07 = Functions.AddTable( I06[2], "SenpaisTrainsTable12_" .. u, 2 )
+			local fluid = e.fluidbox[1]
+			local c = e.prototype.fluid_capacity
+			if fluid ~= nil then
+				local fp = game.fluid_prototypes[fluid.name]
+				local I08 =
+				{
+					Functions.AddSprite( I07, "SenpaisTrainsSprite05_" .. u, "fluid/" .. fluid.name ),
+					Functions.AddProgressbar( I07, "SenpaisTrainsProgressbar01_" .. u, c, fluid.amount / c )
+				}
+				I08[1].tooltip = fp.localised_name
+				I08[2].style.color = fp.base_color
+			else
+				local I08 = Functions.AddLabel( I07, "SenpaisTrainsLabel31_" .. u, "No Fluid loaded" )
+			end
 		end
-	end
-end
-
-function Senpais_Trains_AttemptUncouple( front, count )
-	local frontCar = front.train.front_stock
-	local backCar = front.train.back_stock
-	if count and math.abs( count ) < #front.train.carriages then
-		local direction = defines.rail_direction.front
-		if front ~= front.train.front_stock then
-			count = count * -1
+	end,
+	SmarterTrainsMain = function( p )
+		local J01 = Functions.AddFrame( p, "SenpaisTrainsFrame27", nil, "Line Management" )
+		local J02 = Functions.AddTable( J01, "SenpaisTrainsTable13", 4 )
+		local J03 =
+		{
+			Functions.AddDropDown( J02, "SenpaisTrainsDropDown02", global.Lines ),
+			Functions.AddChooseElemButtonSignal( J02, "SenpaisTrainsChooseElemButton01", nil ),
+			Functions.AddSpriteButton( J02, "SenpaisTrainsSpriteButton06", "Senpais-plus" ),
+			Functions.AddSpriteButton( J02, "SenpaisTrainsSpriteButton07", "utility/trash_bin" )
+		}
+	end,
+	SmarterTrainsList = function( p )
+		local K01 = Functions.AddScrollPane( p, "SenpaisTrainsScrollPane08", nil, nil )
+		K01.style.maximal_height = 300
+		local K02 = Functions.AddFrame( K01, "SenpaisTrainsFrame28", "image_frame", nil )
+		K02.style.left_padding = 4
+		K02.style.right_padding = 8
+		K02.style.bottom_padding = 4
+		K02.style.top_padding = 4
+		local K03 = Functions.AddTable( K02, "SenpaisTrainsTable14", 2 )
+		K03.style.horizontal_spacing = 16
+		K03.style.vertical_spacing = 8
+		K03.style.column_alignments[2] = "right"
+		K03.draw_horizontal_line_after_headers = true
+		K03.draw_vertical_lines = true
+		local K04 =
+		{
+			Functions.AddLabel( K03, "SenpaisTrainsLabel31", "Station" ),
+			Functions.AddLabel( K03, "SenpaisTrainsLabel32", "Signal" ),
+		}
+		for _, s in pairs( global.ScheduleLinesSignals[global.Lines[p.children[1].children[1].selected_index]] ) do
+			local y = s.station
+			local K05 =
+			{
+				Functions.AddLabel( K03, "SenpaisTrainsLabel33_" .. y, y ),
+				Functions.AddChooseElemButtonSignal( K03, "SenpaisTrainsChooseElemButton02_" .. y, Functions.CheckSignal( s.signal ) )
+			}
 		end
-		local target = count
-		if count < 0 then
-			count = #front.train.carriages + count
-			target = count + 1
+	end,
+	SmarterTrainsAdd = function( p )
+		local L01 = Functions.AddFrame( p, "SenpaisTrainsFrame29", nil, "Add a new Line" )
+		local L02 = Functions.AddTable( L01, "SenpaisTrainsTable15", 2 )
+		local L03 =
+		{
+			Functions.AddTexfield( L02, "SenpaisTrainsTextfield02", nil ),
+			Functions.AddChooseElemButtonSignal( L02, "SenpaisTrainsChooseElemButton03", nil ),
+			Functions.AddButton( L01, "SenpaisTrainsButton06", "Add Line" )
+		}
+	end,
+	ElectricTrainsMain = function( p )
+		local pn = 0
+		local pp = 0
+		local am = 0
+		local pt = "W"
+		local pv = "kJ"
+		local aj = "MJ"
+		local d = global.Data
+		local tl = global.TrainsList
+		local al = global.AccuList
+		if #tl ~= d.tc then
+			for i, t in pairs( tl ) do
+				if t.entity.valid then
+					pn = pn + ( t.multi * 600 )
+				else
+					table.remove( global.TrainsList, i )
+					tl = global.TrainsList
+				end
+			end
+			if pn > 1000 then
+				pn = pn / 1000
+				pt = "MW"
+				if pn > 1000 then
+					pn = pn / 1000
+					pt = "GW"
+				end
+			end
+			global.Data.tc = #tl
+			global.Data.pn = pn
+			global.Data.pt = pt
 		else
-			count = count + 1
+			pn = d.pn
+			pt = d.pt
 		end
-		local wagon = front.train.carriages[count]
-		if not Senpais_Trains_OrientationMatch( Senpais_Trains_GetOrientation( wagon, front.train.carriages[target] ), wagon.orientation ) then
-			direction = Senpais_Trains_SwapRailDir( direction )
+		for i, a in pairs( al ) do
+			if a.valid then
+				pp = pp + a.energy
+			else
+				table.remove( global.AccuList, i )
+				al = global.AccuList
+			end
 		end
-		if wagon.disconnect_rolling_stock( direction ) then
-			local frontLocos = 0
-			local backLocos = 0
-			local wagons = frontCar.train.carriages
-			for _, carriage in pairs( wagons ) do
-				if carriage.type == "locomotive" then
-					frontLocos = frontLocos + 1
+		if pp > 1000 then
+			pp = Functions.Round( pp / 1000, 2 )
+			pv = "KJ"
+			if pp > 1000 then
+				pp = Functions.Round( pp / 1000, 2 )
+				pv = "MJ"
+				if pp > 1000 then
+					pp = Functions.Round( pp / 1000, 2 )
+					pv = "GJ"
+					if pp > 1000 then
+						pp = Functions.Round( pp / 1000, 2 )
+						pv = "TJ"
+					end
 				end
 			end
-			local wagons = backCar.train.carriages
-			for _, carriage in pairs( wagons ) do
-				if carriage.type == "locomotive" then
-					backLocos = backLocos + 1
+		end
+		if #al ~= d.ac then
+			am = 25 * #al
+			if am > 1000 then
+				am = am / 1000
+				aj = "GJ"
+				if am > 1000 then
+					am = am / 1000
+					aj = "TJ"
 				end
 			end
-			if frontLocos > 0 then frontCar.train.manual_mode = false end
-			if backLocos > 0 then backCar.train.manual_mode = false end
-			return wagon
-		end
-	end
-end
-
--- SmarterTrains
-
-function Senpais_Trains_ClearSchedule( schedule )
-	local used = {}
-	for i , v in pairs( schedule.records ) do
-		if used[v.station] then
-			schedule.records[i] = nil
+			global.Data.ac = #al
+			global.Data.am = am
+			global.Data.aj = aj
 		else
-			used[v.station] = true
+			am = d.am
+			aj = d.aj
 		end
-	end
-	return schedule
-end
-
-function Senpais_Trains_Check( signal )
-	if settings.startup["Coupling"].value and signal ~= nil and ( signal.name == "signal-couple" or signal.name == "signal-decouple" ) then
-		signal = nil
-	end
-	if signal ~= nil then
-		if signal.type == "fluid" then
-			if not game.fluid_prototypes[signal.name] then
-				signal = nil
-			end
-		elseif signal.type == "item" then
-			if not game.item_prototypes[signal.name] then
-				signal = nil
-			end
-		elseif signal.type == "virtual" then
-			if not game.virtual_signal_prototypes[signal.name] then
-				signal = nil
+		local M01 = Functions.AddFrame( p, "SenpaisTrainsFrame30", "frame_in_right_container", "Electric Trains States" )
+		local M02 =
+		{
+			Functions.AddFlow( M01, "SenpaisTrainsFlow02", "description_vertical_flow" ),
+			Functions.AddFlow( M01, "SenpaisTrainsFlow03", "description_vertical_flow" ),
+			Functions.AddFlow( M01, "SenpaisTrainsFlow04", "description_vertical_flow" ),
+			Functions.AddFlow( M01, "SenpaisTrainsFlow05", "description_vertical_flow" ),
+			Functions.AddFlow( M01, "SenpaisTrainsFlow06", "description_vertical_flow" ),
+			Functions.AddProgressbar( M01, "SenpaisTrainsProgressbar02", am, pp / am )
+		}
+		local M03 =
+		{
+			Functions.AddTable( M02[1], "SenpaisTrainsTable16", 2 ),
+			Functions.AddTable( M02[2], "SenpaisTrainsTable17", 2 ),
+			Functions.AddTable( M02[3], "SenpaisTrainsTable18", 2 ),
+			Functions.AddTable( M02[4], "SenpaisTrainsTable19", 2 ),
+			Functions.AddTable( M02[5], "SenpaisTrainsTable20", 2 )
+		}
+		local M04 =
+		{
+			Functions.AddLabel( M03[1], "SenpaisTrainsLabel34", "Total Provider:" ),
+			Functions.AddLabel( M03[1], "SenpaisTrainsLabel35", #al ),
+			Functions.AddLabel( M03[2], "SenpaisTrainsLabel36", "Total Electric Trains:" ),
+			Functions.AddLabel( M03[2], "SenpaisTrainsLabel37", #tl ),
+			Functions.AddLabel( M03[3], "SenpaisTrainsLabel38", "Total Power Needed for Trains:" ),
+			Functions.AddLabel( M03[3], "SenpaisTrainsLabel39", pn .. pt ),
+			Functions.AddLabel( M03[4], "SenpaisTrainsLabel40", "Total Power in Provider:" ),
+			Functions.AddLabel( M03[4], "SenpaisTrainsLabel41", pp .. pv ),
+			Functions.AddLabel( M03[5], "SenpaisTrainsLabel42", "Total Power Provider can Store:" ),
+			Functions.AddLabel( M03[5], "SenpaisTrainsLabel43", am .. aj )
+		}
+		M02[6].style = "electric_satisfaction_progressbar"
+		M04[1].style = "description_label"
+		M04[2].style = "description_value_label"
+		M04[3].style = "description_label"
+		M04[4].style = "description_value_label"
+		M04[5].style = "description_label"
+		M04[6].style = "description_value_label"
+		M04[7].style = "description_label"
+		M04[8].style = "description_value_label"
+		M04[9].style = "description_label"
+		M04[10].style = "description_value_label"
+	end,
+	OnBuild = function( ee )
+		local e = ee.created_entity
+		if e.name == "Senpais-Power-Provider" then
+			table.insert( global.AccuList, e )
+		elseif e.type == "locomotive" then
+			for _, r in pairs( global.Register ) do
+				if e.name == r.name then
+					table.insert( global.TrainsList, { multi = r.multy, entity = e } )
+					break
+				end
 			end
 		end
-	end
-	return signal
-end
+	end,
+	AttemptCouple = function( t, c, s )
+		if c then
+			local d = defines.rail_direction.front
+			if count < 0 then
+				d = defines.rail_direction.back
+			end
+			local f = Functions.GetRealFront
+			if not Functions.OrientationMatch( f.orientation, s.orientation ) then
+				d = Functions.SwapRailDir( d )
+			end
+			if f.connect_rolling_stock( d ) then
+				return f
+			end
+		end
+	end,
+	AttemptUncouple = function( f, c )
+		local t = f.train
+		local cr = t.carriages
+		local fr = t.front_stock
+		local br = t.back_stock
+		if c and math.abs( c ) < #cr then
+			local d = defines.rail_direction.front
+			if f ~= fr then
+				c = c * -1
+			end
+			local ta = c
+			if c < 0 then
+				c = #cr + c
+				ta = c + 1
+			else
+				c = c + 1
+			end
+			local w = t.cr[c]
+			if not Functions.OrientationMatch( Functions.GetOrientation( w, cr[ta] ), w.orientation ) then
+				d = Functions.SwapRailDir( d )
+			end
+			if w.disconnect_rolling_stock( d ) then
+				local fl = 0
+				local bl = 0
+				fr = fr.train
+				br = br.train
+				local ws = fr.carriages
+				for _, ce in pairs( ws ) do
+					if ce.type == "locomotive" then
+						fl = fl + 1
+					end
+				end
+				es = br.carriages
+				for _, ce in pairs( ws ) do
+					if ce.type == "locomotive" then
+						bl = bl + 1
+					end
+				end
+				if fl > 0 then fr.manual_mode = false end
+				if bl > 0 then br.manual_mode = false end
+				return w
+			end
+		end
+	end,
+	AddButton = function( f, n, c )
+		return f.add{ type = "button", name = n, caption = c }
+	end,
+	AddChooseElemButtonSignal = function( f, n, s )
+		return f.add{ type = "choose-elem-button", name = n, elem_type = "signal", signal = s }
+	end,
+	AddDropDown = function( f, n, i )
+		return f.add{ type = "drop-down", name = n, items = i }
+	end,
+	AddFlow = function( f, n, s )
+		return f.add{ type = "flow", name = n, direction = "vertical", style = s }
+	end,
+	AddFrame = function( f, n, s, c )
+		return f.add{ type = "frame", name = n, direction = "vertical", style = s, caption = c }
+	end,
+	AddLabel = function( f, n, c )
+		return f.add{ type = "label", name = n, caption = c }
+	end,
+	AddRadioButton = function( f, n, s )
+		return f.add{ type = "radiobutton", name = n, state = s }
+	end,
+	AddProgressbar = function( f, n, s, v )
+		return f.add{ type = "progressbar", name = n, size = s, value = v }
+	end,
+	AddScrollPane = function( f, n )
+		return f.add{ type = "scroll-pane", name = n }
+	end,
+	AddSprite = function( f, n, s )
+		return f.add{ type = "sprite", name = n, sprite = s }
+	end,
+	AddSpriteButton = function( f, n, s )
+		return f.add{ type = "sprite-button", name = n, sprite = s }
+	end,
+	AddTable = function( f, n, c )
+		return f.add{ type = "table", name = n, column_count = c }
+	end,
+	AddTexfield = function( f, n, t )
+		return f.add{ type = "textfield", name = n, text = t }
+	end,
+	CheckSignal = function( s )
+		if s ~= nil then
+			local n = s.name
+			local t = s.type
+			if settings.startup["Coupling"].value and ( n == "signal-couple" or n == "signal-decouple" ) then
+				return nil
+			elseif t == "fluid" then
+				if not game.fluid_prototypes[n] then
+					return nil
+				end
+			elseif t == "item" then
+				if not game.item_prototypes[n] then
+					return nil
+				end
+			elseif t == "virtual" then
+				if not game.virtual_signal_prototypes[n] then
+					return nil
+				end
+			end
+			return s
+		else
+			return nil
+		end
+	end,
+	ClearSchedule = function( s )
+		local u = {}
+		for i, r in pairs( s.records ) do
+			if u[r.station] then
+				s.records[i] = nil
+			else
+				u[r.station] = true
+			end
+		end
+		return s
+	end,
+	GetDistance = function( pa, pb )
+		return math.abs( pa.x - pb.x ) + math.abs( pa.y - pb.y )
+	end,
+	GetOrientation = function( e, t )
+		local x = t.position.x - e.position.x
+		local y = t.position.y - e.position.y
+		return ( math.atan2( y, x ) / 2 / math.pi + 0.25 ) % 1
+	end,
+	GetRealFront = function( t, s )
+		if Functions.GetDistance( t.front_stock.position, s.position ) < Functions.GetDistance( t.back_stock.position, s.position ) then
+			return t.front_stock
+		else
+			return t.back_stock
+		end
+	end,
+	GetRealBack = function( t, s )
+		if Functions.GetDistance( t.front_stock.position, s.position ) < Functions.GetDistance( t.back_stock.position, s.position ) then
+			return t.back_stock
+		else
+			return t.front_stock
+		end
+	end,
+	GetSignal = function( e, s )
+		local r = e.get_circuit_network( defines.wire_type.red )
+		local g = e.get_circuit_network( defines.wire_type.green )
+		local v = 0
+		if r then
+			v = r.get_signal( s )
+		end
+		if g then
+			v = v + g.get_signal( s )
+		end
+		if value == 0 then
+			return nil
+		else
+			return value
+		end
+	end,
+	OrientationMatch = function( o1, o2 )
+		return math.abs( o1, o2 ) < 0.25 or math.abs( o1, o2 ) > 0.75
+	end,
+	Round = function( n, d )
+		local m = 10 ^ d
+		return math.floor( n * m + 0.5 ) / m
+	end,
+	SwapRailDir = function( r )
+		if r == defines.rail_direction.front then
+			return defines.rail_direction.back
+		else
+			return defines.rail_direction.front
+		end
+	end,
+}
 
--- Math
-
-function Senpais_Trains_Round( num, decimalNumbers )
-	local mult = 10^( decimalNumbers or 0 )
-	return math.floor( num * mult + 0.5 ) / mult
-end
+return Functions

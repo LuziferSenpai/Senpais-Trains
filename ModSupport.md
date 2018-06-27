@@ -58,5 +58,5 @@ stack = stacksize of the item
 ingredients = recipe ingredients
 tech = which tech unlocks the recipe?
 
-And this was all!
-There are few other functions, but I dont explain them.
+### And this was all!
+### There are few other functions, but I dont explain them.
