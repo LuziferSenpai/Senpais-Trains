@@ -255,7 +255,7 @@ script.on_event( defines.events.on_gui_elem_changed, function ( ee )
 end )
 
 script.on_event( defines.events.on_player_created, function( ee )
-	local p = game.players[event.player_index]
+	local p = game.players[ee.player_index]
 	local m = mod_gui.get_button_flow( p )
 	if not m.SenpaisTrainsButton then
 		local b = Functions.AddSpriteButton( m, "SenpaisTrainsButton", "Senpais-S" )
