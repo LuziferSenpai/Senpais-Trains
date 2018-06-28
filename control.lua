@@ -48,6 +48,10 @@ script.on_configuration_changed( function( d )
 			if m.SenpaisGUI then
 				m.SenpaisGUI.destroy()
 			end
+			m = mod_gui.get_button_flow( p )
+			if m.SenpaisGUIButton then
+				m.SenpaisGUIButton.destroy()
+			end
 		end
 		for _, r in pairs( global.Register ) do
 			if not game.entity_prototypes[r.name] then
@@ -419,7 +423,11 @@ script.on_event( defines.events.on_tick, function( ee )
 	end
 end )
 
-script.on_event( { defines.events.on_built_entity, defines.events.on_robot_built_entity }, Functions.OnBuild )
+script.on_event( { defines.events.on_built_entity, defines.events.on_robot_built_entity, defines.events.script_raised_built }, function( ee )
+	if ee.created_entity and ee.created_entity.valid then
+		Functions.OnBuild( ee )
+	end
+end )
 
 remote.add_interface( "Addtrain",
 	{
