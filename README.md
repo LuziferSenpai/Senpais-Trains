@@ -54,6 +54,8 @@ this is a combination of my two old MODs [Senpais Electric Trains](https://mods.
  - Offset Issues by the Battle Laser while shooting
 
 ## Releases
+ - v1.1.1
+ 	- Added Support for script raised built Entitys!
  - v1.1.0
     - Reworked the Code
     - Removed a bit of Code Mass
@@ -118,22 +120,6 @@ this is a combination of my two old MODs [Senpais Electric Trains](https://mods.
     - New Artillery Wagon called German Railway Gun "Dora"
     - New Atomic 80cm Caliber Shell only for the German Railway Gun "Dora"
     - fixxed some Bugs
- - v0.1.7
-    - Fixed Energy Transfer from Provider to Trains
- - v0.1.6
-    - Removed directory from the Functions, it was only for the Mask Replacement.
- - v0.1.5
-    - Fixed Train Grid, now you can put in Fusion Reactor and Tier 2 Stuff
- - v0.1.4
-    - Electric Transfer Fix
- - v0.1.3
-    - Function Fix
- - v0.1.2
-    - Migration Fix
- - v0.1.1
-    - Removed GUI from Providers
- - v0.1.0
-    - Release
 
 ## Credits
 
