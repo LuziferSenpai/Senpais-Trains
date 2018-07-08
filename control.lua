@@ -76,7 +76,7 @@ script.on_event( defines.events.on_gui_click, function( ee )
 	local n = e.name
 	local p = game.players[ee.player_index]
 	local pa = e.parent
-	if not ( n or pa ) then return end
+	if ( n == nil or pa == nil ) then return end
 	local m = mod_gui.get_frame_flow( p )
 	if n == "SenpaisTrainsButton" then
 		if m.SenpaisTrainsMainGui then
@@ -205,7 +205,7 @@ script.on_event( defines.events.on_gui_selection_state_changed, function( ee )
 	local e = ee.element
 	local pa = e.parent
 	local n = e.name
-	if not (n or pa ) then return end
+	if (n == nil or pa == nil ) then return end
 	if n == "SenpaisTrainsDropDown01" then
 		pa.children[3].clear()
 		Functions.CountTrainsEntityEditList( pa.children[3], e.selected_index )
@@ -223,7 +223,7 @@ end)
 script.on_event( defines.events.on_gui_checked_state_changed, function( ee )
 	local e = ee.element
 	local pa = e.parent
-	if not p then return end
+	if pa == nil then return end
 	if pa.name == "SenpaisTrainsTable04" then
 		local c = pa.children
 		for u = 1, #c do
