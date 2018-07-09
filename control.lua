@@ -384,20 +384,23 @@ script.on_event( defines.events.on_tick, function( ee )
 	local pp = 0
 	local e = {}
 	if #global.TrainsList > 0 and #global.AccuList > 0 then
-		for i, t in pairs( global.TrainsList ) do
-			e = t.entity
+		for i = #global.TrainsList, 1, -1 do
+			e = global.TrainsList[i].entity
 			if e.valid then
 				e = e.burner
 				pn = pn + ( e.heat_capacity - e.heat )
 			else
-				table.remove( global.TrainsList, i )
+				global.TrainsList[i] = global.TrainsList[#global.TrainsList]
+				global.TrainsList[#global.TrainsList] = nil
 			end
 		end
-		for i, a in pairs( global.AccuList ) do
+		for i = #global.AccuList, 1, -1 do
+			local a = global.AccuList[i]
 			if a.valid then
 				ps = ps + a.energy
 			else
-				table.remove( global.AccuList, i )
+				global.AccuList[i] = global.AccuList[#global.AccuList]
+				global.AccuList[#global.AccuList] = nil
 			end
 		end
 		local tt = global.TrainsList
