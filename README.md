@@ -54,6 +54,10 @@ this is a combination of my two old MODs [Senpais Electric Trains](https://mods.
  - Offset Issues by the Battle Laser while shooting
 
 ## Releases
+ - v1.1.6
+    - Hopefully fixed [Issue](https://github.com/LuziferSenpai/Senpais-Trains/issues/4)
+ - v1.1.5
+    - Hopefully fixed [Issue](https://github.com/LuziferSenpai/Senpais-Trains/issues/3)
  - v1.1.4
     - Fixed a horrible Bug with on_tick and valid entitys
  - v1.1.3

@@ -281,6 +281,8 @@ script.on_event( defines.events.on_train_changed_state, function( ee )
 		local tg = global.TrainsID[t.id]
 		global.TrainsID[t.id] = nil
 		local s = tg.s
+		if not s then return end
+		if not s.valid then return end
 		if tg.st then
 			t.manual_mode = true
 			local r = s.get_circuit_network( defines.wire_type.red )
