@@ -1,6 +1,7 @@
 require "mod-gui"
 require "config"
 local Functions = require "functions"
+local de = defines.events
 local buttons =
 {
 	["SenpaisTrainsSpriteButton01"] = true,
@@ -16,65 +17,64 @@ script.on_init( function()
 end )
 
 script.on_configuration_changed( function( d )
-	if d.mod_changes["Senpais_Trains"] then
-		if global.SenpaisTrainsList then
-			global.TrainsList = global.SenpaisTrainsList
-			global.SenpaisTrainsList = nil
+	if global.SenpaisTrainsList then
+		global.TrainsList = global.SenpaisTrainsList
+		global.SenpaisTrainsList = nil
+	end
+	if global.SenpaisAccuList then
+		global.AccuList = global.SenpaisAccuList
+		global.SenpaisAccuList = nil
+	end
+	if global.SenpaisLines then
+		global.Lines = global.SenpaisLines
+		global.SenpaisLines = nil
+	end
+	if global.SenpaisScheduleLines then
+		global.ScheduleLines = global.SenpaisScheduleLines
+		global.SenpaisScheduleLines = nil
+	end
+	if global.SenpaisScheduleLinesSignals then
+		global.ScheduleLinesSignals = global.SenpaisScheduleLinesSignals
+		global.SenpaisScheduleLinesSignals = nil
+	end
+	if global.SenpaisTrainSchedulebyID then
+		global.TrainsID = global.SenpaisTrainSchedulebyID
+		global.SenpaisTrainSchedulebyID = nil
+	end
+	Functions.Globals()
+	Functions.Players()
+	for _, p in pairs( game.players ) do
+		local m = mod_gui.get_frame_flow( p )
+		if m.SenpaisGUI then
+			m.SenpaisGUI.destroy()
 		end
-		if global.SenpaisAccuList then
-			global.AccuList = global.SenpaisAccuList
-			global.SenpaisAccuList = nil
+		m = mod_gui.get_button_flow( p )
+		if m.SenpaisGUIButton then
+			m.SenpaisGUIButton.destroy()
 		end
-		if global.SenpaisLines then
-			global.Lines = global.SenpaisLines
-			global.SenpaisLines = nil
+	end
+	for _, r in pairs( global.Register ) do
+		if not game.entity_prototypes[r.name] then
+			r = nil
 		end
-		if global.SenpaisScheduleLines then
-			global.ScheduleLines = global.SenpaisScheduleLines
-			global.SenpaisScheduleLines = nil
-		end
-		if global.SenpaisScheduleLinesSignals then
-			global.ScheduleLinesSignals = global.SenpaisScheduleLinesSignals
-			global.SenpaisScheduleLinesSignals = nil
-		end
-		if global.SenpaisTrainSchedulebyID then
-			global.TrainsID = global.SenpaisTrainSchedulebyID
-			global.SenpaisTrainSchedulebyID = nil
-		end
-		Functions.Globals()
-		Functions.Players()
-		for _, p in pairs( game.players ) do
-			local m = mod_gui.get_frame_flow( p )
-			if m.SenpaisGUI then
-				m.SenpaisGUI.destroy()
-			end
-			m = mod_gui.get_button_flow( p )
-			if m.SenpaisGUIButton then
-				m.SenpaisGUIButton.destroy()
-			end
-		end
-		for _, r in pairs( global.Register ) do
-			if not game.entity_prototypes[r.name] then
-				r = nil
-			end
-		end
-		if global.TrainsList ~= nil then
-			for _, t in pairs( global.TrainsList ) do
-				for _, r in pairs( global.Register ) do
-					if t.entity.name == r.name and t.multi ~= r.multy then
-						t.multi = r.multy
-						break
-					end
+	end
+	if global.TrainsList ~= nil then
+		for _, t in pairs( global.TrainsList ) do
+			for _, r in pairs( global.Register ) do
+				if t.entity.name == r.name and t.multi ~= r.multy then
+					t.multi = r.multy
+					break
 				end
 			end
 		end
 	end
 end )
 
-script.on_event( defines.events.on_gui_click, function( ee )
+script.on_event( { de.on_gui_click, de.on_gui_selection_state_changed, de.on_gui_checked_state_changed }, function( ee )
+	local id = ee.player_index
+	local p = game.players[id]
 	local e = ee.element
 	local n = e.name
-	local p = game.players[ee.player_index]
 	local pa = e.parent
 	if ( n == nil or pa == nil ) then return end
 	local m = mod_gui.get_frame_flow( p )
@@ -84,7 +84,87 @@ script.on_event( defines.events.on_gui_click, function( ee )
 		else
 			Functions.MainGui( m )
 		end
-		return
+	elseif n == "SenpaisTrainsButton03" then
+		local et = global.PlayerDATA[id].Entity
+		et.backer_name = pa.children[1].text or et.backer_name
+		if settings.startup["Smarter-Trains"].value and pa.children[2].selected_index > 0 then
+			for _, s in pairs( pa.children[3].children[1].children[1].children ) do
+				if s.type == "radiobutton" and s.state == true then
+					local st = s.name:match( "_(%a*)$" )
+					local r = global.ScheduleLines[global.Lines[pa.children[2].selected_index]].schedule.records
+					local et = et.train
+					for u = 1, #r do
+						if r[u].station == st then
+							et.manual_mode = true
+							et.schedule = { current = u, records = r }
+							et.manual_mode = false
+							break
+						end
+					end
+					break
+				end
+			end
+		end
+		local pa2 = pa.parent.parent.children
+		Functions.DestroyChildren( pa2 )
+		Functions.CountTrainsMain( pa2[2] )
+	elseif n == "SenpaisTrainsSpriteButton06" then
+		pa.parent.parent.parent.children[3].clear()
+		if p.opened and p.opened.train then
+			Functions.SmarterTrainsAdd( pa.parent.parent.parent.children[3] )
+		end
+	elseif n == "SenpaisTrainsButton06" then
+		local t = pa.children[1].children[1].text
+		local o = p.opened
+		if o and o.train then
+			o = o.train
+			if o.schedule ~= nil then
+				if t ~= nil and not global.ScheduleLines[t] then
+					table.insert( global.Lines, t )
+					local c = Functions.ClearSchedule( o.schedule )
+					global.ScheduleLines[t] = { signal = Functions.CheckSignal( pa.children[1].children[2].elem_value ), schedule = c }
+					local p = {}
+					for _, r in pairs( c.records ) do
+						table.insert( p, { signal = nil, station = r.station } )
+					end
+					global.ScheduleLinesSignals[t] = p
+					local pa2 = pa.parent.parent
+					Functions.DestroyChildren( pa2.children )
+					Functions.SmarterTrainsMain( pa2.children[2] )
+				else
+					pa.parent.parent.children[3].clear()
+					p.print( { "Senpais-Trains.NoName" } )
+				end
+			else
+				pa.parent.parent.children[3].clear()
+				p.print( { "Senpais-Trains.NoSchedule" } )
+			end
+		else
+			pa.parent.parent.children[3].clear()
+			game.print( { "Senpais-Trains.NoTrainOpen" } )
+		end
+	elseif n == "SenpaisTrainsDropDown01" then
+		pa.children[3].clear()
+		Functions.CountTrainsEntityEditList( pa.children[3], e.selected_index )
+	elseif n == "SenpaisTrainsSpriteButton07" then
+		if pa.children[1].selected_index > 0 then
+			local i = pa.children[1].selected_index
+			local l = global.Lines[i]
+			global.ScheduleLinesSignals[l] = nil
+			global.ScheduleLines[l] = nil
+			table.remove( global.Lines, i )
+			local pa2 = pa.parent.parent.parent.children[2]
+			Functions.DestroyChildren( pa2 )
+			Functions.SmarterTrainsMain( pa2 )
+		else
+			p.print( { "Senpais-Trains.NoLineSelected" } )
+		end
+	elseif n == "SenpaisTrainsDropDown02" and e.selected_index > 0 then
+		if pa.parent.children[2] then
+			pa.parent.children[2].destroy()
+		end
+		pa.children[2].elem_value = Functions.CheckSignal( global.ScheduleLines[global.Lines[e.selected_index]].signal )
+		Functions.SmarterTrainsList( pa.parent )
 	elseif pa.name == "SenpaisTrainsFrame01" then
 		if buttons[n] then
 			Functions.DestroyChildren( pa.parent.parent.children )
@@ -100,131 +180,31 @@ script.on_event( defines.events.on_gui_click, function( ee )
 		elseif n == "SenpaisTrainsSpriteButton05" then
 			Functions.ElectricTrainsMain( pa.parent.parent.children[2] )
 		end
-		return
 	elseif pa.name == "SenpaisTrainsTable02" then
 		pa.parent.parent.parent.parent.parent.children[3].clear()
-		for _, t in pairs( global.PlayerDATA[p.index].TrainsCount ) do
+		for _, t in pairs( global.PlayerDATA[id].TrainsCount ) do
 			if n == "SenpaisTrainsButton01_" .. t.name then
 				Functions.CountTrainsList( pa.parent.parent.parent.parent.parent.children[3], t )
 				break
 			end
 		end
-		return
-	elseif pa.name:find( "SenpaisTrainsFrame10_" ) ~= nil then
-		local pd = global.PlayerDATA[p.index]
-		for _, t in pairs( pd.TrainsCount ) do
-			if t.name == pd.EntityName then
-				pa.parent.parent.parent.parent.parent.parent.children[4].clear()
-				local et = t.entities[tonumber( n:match( "_(%d*)$" ) )]
-				global.PlayerDATA[p.index].Entity = et
-				Functions.CountTrainsEntityEdit( pa.parent.parent.parent.parent.parent.parent.children[4], et.backer_name )
-				break
-			end
-		end
-		return
-	elseif n == "SenpaisTrainsButton03" then
-		local et = global.PlayerDATA[p.index].Entity
-		et.backer_name = pa.children[1].text or et.backer_name
-		if settings.startup["Smarter-Trains"].value and pa.children[2].selected_index > 0 then
-			for _, s in pairs( pa.children[3].children[1].children[1].children ) do
-				local st = s.name:match( "_(%a*)$" )
-				local r = global.ScheduleLines[global.Lines[pa.children[2].selected_index]].schedule.records
-				local et = et.train
-				for u = 1, #r do
-					if r[u].station == st then
-						et.manual_mode = true
-						et.schedule = { current = u, records = r }
-						et.manual_mode = false
-						break
-					end
-				end
-			end
-		end
-		local pa2 = pa.parent.parent.children
-		Functions.DestroyChildren( pa2 )
-		Functions.CountTrainsMain( pa2[2] )
-		return
 	elseif pa.name == "SenpaisTrainsTable05" then
 		pa.parent.parent.parent.parent.parent.children[3].clear()
-		for _, w in pairs( global.PlayerDATA[p.index].WagonsCount ) do
+		for _, w in pairs( global.PlayerDATA[id].WagonsCount ) do
 			if n == "SenpaisTrainsButton04_" .. w.name then
 				Functions.CountWagonsList( pa.parent.parent.parent.parent.parent.children[3], w )
 				break
 			end
 		end
-		return
 	elseif pa.name == "SenpaisTrainsTable10" then
 		pa.parent.parent.parent.parent.parent.children[3].clear()
-		for _, f in pairs( global.PlayerDATA[p.index].FluidWagonsCount ) do
+		for _, f in pairs( global.PlayerDATA[id].FluidWagonsCount ) do
 			if n == "SenpaisTrainsButton05_" .. f.name then
 				Functions.CountFluidWagonsList( pa.parent.parent.parent.parent.parent.children[3], f )
 				break
 			end
 		end
-		return
-	elseif n == "SenpaisTrainsSpriteButton06" then
-		pa.parent.parent.parent.children[3].clear()
-		if p.opened and p.opened.train then
-			Functions.SmarterTrainsAdd( pa.parent.parent.parent.children[3] )
-		end
-		return
-	elseif n == "SenpaisTrainsSpriteButton07" and pa.children[1].selected_index > 0 then
-		local i = pa.children[1].selected_index
-		local l = global.Lines[i]
-		global.ScheduleLinesSignals[l] = nil
-		global.ScheduleLines[l] = nil
-		table.remove( global.Lines, i )
-		local pa2 = pa.parent.parent.parent.children[2]
-		Functions.DestroyChildren( pa2 )
-		Functions.SmarterTrainsMain( pa2 )
-		return
-	elseif n == "SenpaisTrainsButton06" then
-		local t = pa.children[1].children[1].text
-		local o = p.opened
-		if o and o.train and t ~= nil and not global.ScheduleLines[t] then
-			o = o.train
-			table.insert( global.Lines, t )
-			local c = Functions.ClearSchedule( o.schedule )
-			global.ScheduleLines[t] = { signal = Functions.CheckSignal( pa.children[1].children[2].elem_value ), schedule = c }
-			local p = {}
-			for _, r in pairs( c.records ) do
-				table.insert( p, { signal = nil, station = r.station } )
-			end
-			global.ScheduleLinesSignals[t] = p
-			local pa2 = pa.parent.parent
-			Functions.DestroyChildren( pa2 )
-			Functions.SmarterTrainsMain( pa2 )
-		else
-			pa.parent.parent.children[3].clear()
-		end
-		return
-	end
-end )
-
-script.on_event( defines.events.on_gui_selection_state_changed, function( ee )
-	local e = ee.element
-	local pa = e.parent
-	local n = e.name
-	if (n == nil or pa == nil ) then return end
-	if n == "SenpaisTrainsDropDown01" then
-		pa.children[3].clear()
-		Functions.CountTrainsEntityEditList( pa.children[3], e.selected_index )
-		return
-	elseif n == "SenpaisTrainsDropDown02" then
-		if pa.parent.children[2] then
-			pa.parent.children[2].destroy()
-		end
-		pa.children[2].elem_value = Functions.CheckSignal( global.ScheduleLines[global.Lines[e.selected_index]].signal )
-		Functions.SmarterTrainsList( pa.parent )
-		return
-	end
-end)
-
-script.on_event( defines.events.on_gui_checked_state_changed, function( ee )
-	local e = ee.element
-	local pa = e.parent
-	if pa == nil then return end
-	if pa.name == "SenpaisTrainsTable04" then
+	elseif pa.name == "SenpaisTrainsTable04" then
 		local c = pa.children
 		for u = 1, #c do
 			if c[u].type == "radiobutton" then
@@ -232,39 +212,56 @@ script.on_event( defines.events.on_gui_checked_state_changed, function( ee )
 			end
 		end
 		e.state = true
+	elseif pa.name:find( "SenpaisTrainsFrame10_" ) ~= nil then
+		local pd = global.PlayerDATA[id]
+		for _, t in pairs( pd.TrainsCount ) do
+			if t.name == pd.EntityName then
+				pa.parent.parent.parent.parent.parent.parent.children[4].clear()
+				local et = t.entities[tonumber( n:match( "_(%d*)$" ) )]
+				global.PlayerDATA[id].Entity = et
+				Functions.CountTrainsEntityEdit( pa.parent.parent.parent.parent.parent.parent.children[4], et.backer_name )
+				break
+			end
+		end
 	end
 end )
 
-script.on_event( defines.events.on_gui_elem_changed, function ( ee )
+script.on_event( defines.events.on_gui_elem_changed, function( ee )
+	local id = ee.player_index
+	local p = game.players[id]
 	local e = ee.element
 	local n = e.name
 	local pa = e.parent
-	if not ( n or pa ) then return end
-	if n == "SenpaisTrainsChooseElemButton01" and pa.children[1].selected_index > 0 then
-		global.ScheduleLines[global.Lines[pa.children[1].selected_index]].signal = Functions.CheckSignal( e.elem_value )
-		return
+	if ( n == nil or pa == nil ) then return end
+	if n == "SenpaisTrainsChooseElemButton01" then
+		if pa.children[1].selected_index > 0 then
+			global.ScheduleLines[global.Lines[pa.children[1].selected_index]].signal = Functions.CheckSignal( e.elem_value )
+		else
+			p.print( "[Senpais Trains] " .. { "NoLineSelected" } )
+			e.elem_value = nil
+		end
 	elseif pa.name == "SenpaisTrainsTable14" then
 		for _, r in pairs( global.ScheduleLinesSignals[global.Lines[pa.parent.parent.parent.children[1].children[1].selected_index]] ) do
-			if n == "SenpaisTrainsChooseElemButton02_" .. r.name then
+			if n == "SenpaisTrainsChooseElemButton02_" .. r.station then
 				r.signal = Functions.CheckSignal( e.elem_value )
 				break
 			end
 		end
-		return
 	end
 end )
 
-script.on_event( defines.events.on_player_created, function( ee )
-	local p = game.players[ee.player_index]
+script.on_event( de.on_player_created, function( ee )
+	local id = ee.player_index
+	local p = game.players[id]
 	local m = mod_gui.get_button_flow( p )
 	if not m.SenpaisTrainsButton then
 		local b = Functions.AddSpriteButton( m, "SenpaisTrainsButton", "Senpais-S" )
 		b.style.visible = true
 	end
-	global.PlayerDATA[p.index] = { TrainsCount = {}, WagonsCount = {}, FluidWagonsCount = {}, EntityName = "", Entity = {} }
+	global.PlayerDATA[id] = { TrainsCount = {}, WagonsCount = {}, FluidWagonsCount = {}, EntityName = "", Entity = {} }
 end )
 
-script.on_event( defines.events.on_train_changed_state, function( ee )
+script.on_event( de.on_train_changed_state, function( ee )
 	local t = ee.train
 	local d = defines.train_state.wait_station
 	if t.state == d then
@@ -368,7 +365,7 @@ script.on_event( defines.events.on_train_changed_state, function( ee )
 	end
 end )
 
-script.on_event( defines.events.on_tick, function( ee )
+script.on_event( de.on_tick, function( ee )
 	if ee.tick % ( game.speed * 15 ) == 0 and settings.startup["Senpais-Power-Provider"].value then
 		for _, p in pairs( game.players ) do
 			local m = mod_gui.get_frame_flow( p ).SenpaisTrainsMainGui
@@ -428,7 +425,7 @@ script.on_event( defines.events.on_tick, function( ee )
 	end
 end )
 
-script.on_event( { defines.events.on_built_entity, defines.events.on_robot_built_entity, defines.events.script_raised_built }, function( ee )
+script.on_event( { de.on_built_entity, de.on_robot_built_entity, de.script_raised_built }, function( ee )
 	if ee.created_entity and ee.created_entity.valid then
 		Functions.OnBuild( ee )
 	end

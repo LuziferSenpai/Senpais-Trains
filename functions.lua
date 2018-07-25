@@ -66,7 +66,7 @@ Functions =
 		end
 	end,
 	CountTrainsMain = function( p )
-		local B01 = Functions.AddFrame( p, "SenpaisTrainsFrame02", nil, "Train Counter" )
+		local B01 = Functions.AddFrame( p, "SenpaisTrainsFrame02", nil, { "Senpais-Trains.TrainCounter" } )
 		local B02 = Functions.AddScrollPane( B01, "SenpaisTrainsScrollPane01" )
 		B02.style.maximal_height = 270
 		local B03 = Functions.AddFrame( B02, "SenpaisTrainsFrame03", "image_frame", nil )
@@ -83,8 +83,8 @@ Functions =
 		B04.draw_vertical_lines = true
 		local B05 =
 		{
-			Functions.AddLabel( B04, "SenpaisTrainsLabel01", "Icon" ),
-			Functions.AddLabel( B04, "SenpaisTrainsLabel02", "Count" ),
+			Functions.AddLabel( B04, "SenpaisTrainsLabel01", { "Senpais-Trains.Icon" } ),
+			Functions.AddLabel( B04, "SenpaisTrainsLabel02", { "Senpais-Trains.Count" } ),
 			Functions.AddLabel( B04, nil, "" )
 		}
 		local player = game.players[p.player_index]
@@ -108,7 +108,7 @@ Functions =
 			{
 				Functions.AddSprite( B04, "SenpaisTrainsSprite01_" .. n, "item/" .. n ),
 				Functions.AddLabel( B04, "SenpaisTrainsLabel03_" .. n, #t.entities ),
-				Functions.AddButton( B04, "SenpaisTrainsButton01_" .. n, "List All" )
+				Functions.AddButton( B04, "SenpaisTrainsButton01_" .. n, { "Senpais-Trains.ListAll" } )
 			}
 			local z = game.entity_prototypes[n] or game.tile_prototypes[n] or game.equipment_prototypes[n] or game.item_prototypes[n]
 			B06[1].tooltip = z.localised_name
@@ -116,7 +116,7 @@ Functions =
 	end,
 	CountTrainsList = function( p, t )
 		global.PlayerDATA[game.players[p.player_index].index].EntityName = t.name
-		local C01 = Functions.AddFrame( p, "SenpaisTrainsFrame04", nil, "All placed Trains of this Type" )
+		local C01 = Functions.AddFrame( p, "SenpaisTrainsFrame04", nil, { "Senpais-Trains.PlacedEntities" } )
 		local C02 = Functions.AddScrollPane( C01, "SenpaisTrainsScrollPane02" )
 		C02.style.maximal_height = 270
 		local C03 = Functions.AddFrame( C02, "SenpaisTrainsFrame05", "image_frame", nil )
@@ -134,10 +134,10 @@ Functions =
 		C04.draw_vertical_lines = true
 		local C05 =
 		{
-			Functions.AddLabel( C04, "SenpaisTrainsLabel04", "Backer Name" ),
-			Functions.AddLabel( C04, "SenpaisTrainsLabel05", "Player Kills" ),
-			Functions.AddLabel( C04, "SenpaisTrainsLabel06", "Unique Train ID" ),
-			Functions.AddLabel( C04, "SenpaisTrainsLabel07", "Health" ),
+			Functions.AddLabel( C04, "SenpaisTrainsLabel04", { "Senpais-Trains.BackerName" } ),
+			Functions.AddLabel( C04, "SenpaisTrainsLabel05", { "Senpais-Trains.PlayerKills" } ),
+			Functions.AddLabel( C04, "SenpaisTrainsLabel06", { "Senpais-Trains.ID" } ),
+			Functions.AddLabel( C04, "SenpaisTrainsLabel07", { "Senpais-Trains.Health" } ),
 			Functions.AddLabel( C04, nil, "" )
 		}
 		for u = 1, #t.entities do
@@ -160,7 +160,7 @@ Functions =
 			{
 				Functions.AddLabel( C06[3], "SenpaisTrainsLabel10_" .. u, e.train.id ),
 				Functions.AddLabel( C06[4], "SenpaisTrainsLabel11_" .. u, e.health .. "/" .. e.prototype.max_health ),
-				Functions.AddButton( C06[5], "SenpaisTrainsButton02_" .. u, "Edit Train" )
+				Functions.AddButton( C06[5], "SenpaisTrainsButton02_" .. u, { "Senpais-Trains.EditTrain" } )
 			}
 		end
 	end,
@@ -175,7 +175,7 @@ Functions =
 			}
 			D03[2].style.maximal_height = 300
 		end
-		local D04 = Functions.AddButton( D01, "SenpaisTrainsButton03", "Apply Changes" )
+		local D04 = Functions.AddButton( D01, "SenpaisTrainsButton03", { "Senpais-Trains.Changes" } )
 	end,
 	CountTrainsEntityEditList = function( p, i )
 		local E01 = Functions.AddFrame( p, "SenpaisTrainsFrame12", "image_frame", nil )
@@ -192,7 +192,7 @@ Functions =
 		local E03 =
 		{
 			Functions.AddLabel( E02, nil, "" ),
-			Functions.AddLabel( E02, "SenpaisTrainsLabel12", "Stations" )
+			Functions.AddLabel( E02, "SenpaisTrainsLabel12", { "Senpais-Trains.Stations" } )
 		}
 		for _, s in pairs( global.ScheduleLinesSignals[global.Lines[i]] ) do
 			local y = s.station
@@ -204,7 +204,7 @@ Functions =
 		end
 	end,
 	CountWagonsMain = function( p )
-		local F01 = Functions.AddFrame( p, "SenpaisTrainsFrame13", nil, "Wagon Counter" )
+		local F01 = Functions.AddFrame( p, "SenpaisTrainsFrame13", nil, { "Senpais-Trains.WagonCounter" } )
 		local F02 = Functions.AddScrollPane( F01, "SenpaisTrainsScrollPane04" )
 		F02.style.maximal_height = 270
 		local F03 = Functions.AddFrame( F02, "SenpaisTrainsFrame14", "image_frame", nil )
@@ -221,8 +221,8 @@ Functions =
 		F04.draw_vertical_lines = true
 		local F05 =
 		{
-			Functions.AddLabel( F04, "SenpaisTrainsLabel14", "Icon" ),
-			Functions.AddLabel( F04, "SenpaisTrainsLabel15", "Count" ),
+			Functions.AddLabel( F04, "SenpaisTrainsLabel14", { "Senpais-Trains.Icon" } ),
+			Functions.AddLabel( F04, "SenpaisTrainsLabel15", { "Senpais-Trains.Count" } ),
 			Functions.AddLabel( F04, nil, "" )
 		}
 		local player = game.players[p.player_index]
@@ -246,14 +246,14 @@ Functions =
 			{
 				Functions.AddSprite( F04, "SenpaisTrainsSprite02_" .. n, "item/" .. n ),
 				Functions.AddLabel( F04, "SenpaisTrainsLabel16_" .. n, #w.entities ),
-				Functions.AddButton( F04, "SenpaisTrainsButton04_" .. n, "List All" )
+				Functions.AddButton( F04, "SenpaisTrainsButton04_" .. n, { "Senpais-Trains.ListAll" } )
 			}
 			local z = game.entity_prototypes[n] or game.tile_prototypes[n] or game.equipment_prototypes[n] or game.item_prototypes[n]
 			F06[1].tooltip = z.localised_name
 		end
 	end,
 	CountWagonsList = function( p, t )
-		local G01 = Functions.AddFrame( p, "SenpaisTrainsFrame15", nil, "All placed Wagons of this Type" )
+		local G01 = Functions.AddFrame( p, "SenpaisTrainsFrame15", nil, { "Senpais-Trains.PlacedEntities" } )
 		local G02 = Functions.AddScrollPane( G01, "SenpaisTrainsScrollPane05" )
 		G02.style.maximal_height = 270
 		local G03 = Functions.AddFrame( G02, "SenpaisTrainsFrame16", "image_frame", nil )
@@ -278,9 +278,9 @@ Functions =
 		}
 		local G06 =
 		{
-			Functions.AddLabel( G05[1], "SenpaisTrainsLabel17", "Health" ),
+			Functions.AddLabel( G05[1], "SenpaisTrainsLabel17", { "Senpais-Trains.Health" } ),
 			Functions.AddTable( G05[2], "SenpaisTrainsTable07", 2 ),
-			Functions.AddLabel( G05[3], "SenpaisTrainsLabel18", "Health" ),
+			Functions.AddLabel( G05[3], "SenpaisTrainsLabel18", { "Senpais-Trains.Health" } ),
 			Functions.AddTable( G05[4], "SenpaisTrainsTable08", 2 ),
 		}
 		G06[2].style.column_alignments[2] = "right"
@@ -291,10 +291,10 @@ Functions =
 		G06[4].style.vertical_spacing = 8
 		local G07 =
 		{
-			Functions.AddLabel( G06[2], "SenpaisTrainsLabel19", "Icon" ),
-			Functions.AddLabel( G06[2], "SenpaisTrainsLabel20", "Load" ),
-			Functions.AddLabel( G06[4], "SenpaisTrainsLabel21", "Icon" ),
-			Functions.AddLabel( G06[4], "SenpaisTrainsLabel22", "Load" )
+			Functions.AddLabel( G06[2], "SenpaisTrainsLabel19", { "Senpais-Trains.Icon" } ),
+			Functions.AddLabel( G06[2], "SenpaisTrainsLabel20", { "Senpais-Trains.Load" } ),
+			Functions.AddLabel( G06[4], "SenpaisTrainsLabel21", { "Senpais-Trains.Icon" } ),
+			Functions.AddLabel( G06[4], "SenpaisTrainsLabel22", { "Senpais-Trains.Load" } )
 		}
 		for u = 1, #t.entities do
 			local e = t.entities[u]
@@ -323,7 +323,7 @@ Functions =
 		end
 	end,
 	CountFluidWagonsMain = function( p )
-		local H01 = Functions.AddFrame( p, "SenpaisTrainsFrame23", nil, "Fluid Wagon Counter" )
+		local H01 = Functions.AddFrame( p, "SenpaisTrainsFrame23", nil, { "Senpais-Trains.FluidWagonCounter" } )
 		local H02 = Functions.AddScrollPane( H01, "SenpaisTrainsScrollPane06" )
 		H02.style.maximal_height = 270
 		local H03 = Functions.AddFrame( H02, "SenpaisTrainsFrame24", "image_frame", nil )
@@ -340,8 +340,8 @@ Functions =
 		H04.draw_vertical_lines = true
 		local H05 =
 		{
-			Functions.AddLabel(  H04, "SenpaisTrainsLabel25", "Icon" ),
-			Functions.AddLabel(  H04, "SenpaisTrainsLabel26", "Count" ),
+			Functions.AddLabel(  H04, "SenpaisTrainsLabel25", { "Senpais-Trains.Icon" } ),
+			Functions.AddLabel(  H04, "SenpaisTrainsLabel26", { "Senpais-Trains.Count" } ),
 			Functions.AddLabel(  H04, nil, "" ),
 		}
 		local player = game.players[p.player_index]
@@ -365,14 +365,14 @@ Functions =
 			{
 				Functions.AddSprite( H04, "SenpaisTrainsSprite04_" .. n, "item/" .. n ),
 				Functions.AddLabel( H04, "SenpaisTrainsLabel27_" .. n, #f.entities ),
-				Functions.AddButton( H04, "SenpaisTrainsButton05_" .. n, "List All" )
+				Functions.AddButton( H04, "SenpaisTrainsButton05_" .. n, { "Senpais-Trains.ListAll" } )
 			}
 			local z = game.entity_prototypes[n] or game.tile_prototypes[n] or game.equipment_prototypes[n] or game.item_prototypes[n]
 			H06[1].tooltip = z.localised_name
 		end
 	end,
 	CountFluidWagonsList = function( p, t )
-		local I01 = Functions.AddFrame( p, "SenpaisTrainsFrame25", nil, "All placed Fluid Wagons of this Type" )
+		local I01 = Functions.AddFrame( p, "SenpaisTrainsFrame25", nil, { "Senpais-Trains.PlacedEntities" } )
 		local I02 = Functions.AddScrollPane( I01, "SenpaisTrainsScrollPane07" )
 		I02.style.maximal_height = 270
 		local I03 = Functions.AddFrame( I02, "SenpaisTrainsFrame26", "image_frame", nil )
@@ -388,8 +388,8 @@ Functions =
 		I04.draw_horizontal_lines = true
 		local I05 =
 		{
-			Functions.AddLabel( I04, "SenpaisTrainsLabel28", "Health" ),
-			Functions.AddLabel( I04, "SenpaisTrainsLabel29", "Fluid with Load/Max" ),
+			Functions.AddLabel( I04, "SenpaisTrainsLabel28", { "Senpais-Trains.Health" } ),
+			Functions.AddLabel( I04, "SenpaisTrainsLabel29", { "Senpais-Trains.Fluid" } ),
 		}
 		for u = 1, #t.entities do
 			local e = t.entities[u]
@@ -411,12 +411,12 @@ Functions =
 				I08[1].tooltip = fp.localised_name
 				I08[2].style.color = fp.base_color
 			else
-				local I08 = Functions.AddLabel( I07, "SenpaisTrainsLabel31_" .. u, "No Fluid loaded" )
+				local I08 = Functions.AddLabel( I07, "SenpaisTrainsLabel31_" .. u, {"Senpais-Trains.NoFluid"} )
 			end
 		end
 	end,
 	SmarterTrainsMain = function( p )
-		local J01 = Functions.AddFrame( p, "SenpaisTrainsFrame27", nil, "Line Management" )
+		local J01 = Functions.AddFrame( p, "SenpaisTrainsFrame27", nil, { "Senpais-Trains.Line" } )
 		local J02 = Functions.AddTable( J01, "SenpaisTrainsTable13", 4 )
 		local J03 =
 		{
@@ -442,8 +442,8 @@ Functions =
 		K03.draw_vertical_lines = true
 		local K04 =
 		{
-			Functions.AddLabel( K03, "SenpaisTrainsLabel31", "Station" ),
-			Functions.AddLabel( K03, "SenpaisTrainsLabel32", "Signal" ),
+			Functions.AddLabel( K03, "SenpaisTrainsLabel31", { "Senpais-Trains.Stations" } ),
+			Functions.AddLabel( K03, "SenpaisTrainsLabel32", { "Senpais-Trains.Signals" } ),
 		}
 		for _, s in pairs( global.ScheduleLinesSignals[global.Lines[p.children[1].children[1].selected_index]] ) do
 			local y = s.station
@@ -455,22 +455,22 @@ Functions =
 		end
 	end,
 	SmarterTrainsAdd = function( p )
-		local L01 = Functions.AddFrame( p, "SenpaisTrainsFrame29", nil, "Add a new Line" )
+		local L01 = Functions.AddFrame( p, "SenpaisTrainsFrame29", nil, { "Senpais-Trains.NewLine" } )
 		local L02 = Functions.AddTable( L01, "SenpaisTrainsTable15", 2 )
 		local L03 =
 		{
 			Functions.AddTexfield( L02, "SenpaisTrainsTextfield02", nil ),
 			Functions.AddChooseElemButtonSignal( L02, "SenpaisTrainsChooseElemButton03", nil ),
-			Functions.AddButton( L01, "SenpaisTrainsButton06", "Add Line" )
+			Functions.AddButton( L01, "SenpaisTrainsButton06", { "Senpais-Trains.AddLine" } )
 		}
 	end,
 	ElectricTrainsMain = function( p )
 		local pn = 0
 		local pp = 0
 		local am = 0
-		local pt = "W"
-		local pv = "kJ"
-		local aj = "MJ"
+		local pt =  "W"
+		local pv =  "kJ"
+		local aj =  "MJ"
 		local d = global.Data
 		local tl = global.TrainsList
 		local al = global.AccuList
@@ -485,10 +485,10 @@ Functions =
 			end
 			if pn > 1000 then
 				pn = pn / 1000
-				pt = "MW"
+				pt =  "MW"
 				if pn > 1000 then
 					pn = pn / 1000
-					pt = "GW"
+					pt =  "GW"
 				end
 			end
 			global.Data.tc = #tl
@@ -508,13 +508,13 @@ Functions =
 		end
 		if pp > 1000 then
 			pp = Functions.Round( pp / 1000, 2 )
-			pv = "KJ"
+			pv = "kJ"
 			if pp > 1000 then
 				pp = Functions.Round( pp / 1000, 2 )
-				pv = "MJ"
+				pv =  "MJ"
 				if pp > 1000 then
 					pp = Functions.Round( pp / 1000, 2 )
-					pv = "GJ"
+					pv =  "GJ"
 					if pp > 1000 then
 						pp = Functions.Round( pp / 1000, 2 )
 						pv = "TJ"
@@ -526,10 +526,10 @@ Functions =
 			am = 25 * #al
 			if am > 1000 then
 				am = am / 1000
-				aj = "GJ"
+				aj =  "GJ"
 				if am > 1000 then
 					am = am / 1000
-					aj = "TJ"
+					aj =  "TJ"
 				end
 			end
 			global.Data.ac = #al
@@ -539,7 +539,7 @@ Functions =
 			am = d.am
 			aj = d.aj
 		end
-		local M01 = Functions.AddFrame( p, "SenpaisTrainsFrame30", "frame_in_right_container", "Electric Trains States" )
+		local M01 = Functions.AddFrame( p, "SenpaisTrainsFrame30", "frame_in_right_container", { "Senpais-Trains.ElectricStates" } )
 		local M02 =
 		{
 			Functions.AddFlow( M01, "SenpaisTrainsFlow02", "description_vertical_flow" ),
@@ -559,16 +559,16 @@ Functions =
 		}
 		local M04 =
 		{
-			Functions.AddLabel( M03[1], "SenpaisTrainsLabel34", "Total Provider:" ),
+			Functions.AddLabel( M03[1], "SenpaisTrainsLabel34", { "Senpais-Trains.TP" } ),
 			Functions.AddLabel( M03[1], "SenpaisTrainsLabel35", #al ),
-			Functions.AddLabel( M03[2], "SenpaisTrainsLabel36", "Total Electric Trains:" ),
+			Functions.AddLabel( M03[2], "SenpaisTrainsLabel36", { "Senpais-Trains.TET" } ),
 			Functions.AddLabel( M03[2], "SenpaisTrainsLabel37", #tl ),
-			Functions.AddLabel( M03[3], "SenpaisTrainsLabel38", "Total Power Needed for Trains:" ),
-			Functions.AddLabel( M03[3], "SenpaisTrainsLabel39", pn .. pt ),
-			Functions.AddLabel( M03[4], "SenpaisTrainsLabel40", "Total Power in Provider:" ),
-			Functions.AddLabel( M03[4], "SenpaisTrainsLabel41", pp .. pv ),
-			Functions.AddLabel( M03[5], "SenpaisTrainsLabel42", "Total Power Provider can Store:" ),
-			Functions.AddLabel( M03[5], "SenpaisTrainsLabel43", am .. aj )
+			Functions.AddLabel( M03[3], "SenpaisTrainsLabel38", { "Senpais-Trains.TPNFT" } ),
+			Functions.AddLabel( M03[3], "SenpaisTrainsLabel39", { "Senpais-Trains." .. pt, pn } ),
+			Functions.AddLabel( M03[4], "SenpaisTrainsLabel40", { "Senpais-Trains.TPIP" } ),
+			Functions.AddLabel( M03[4], "SenpaisTrainsLabel41", { "Senpais-Trains." .. pv, pp } ),
+			Functions.AddLabel( M03[5], "SenpaisTrainsLabel42", { "Senpais-Trains.TPPCS" } ),
+			Functions.AddLabel( M03[5], "SenpaisTrainsLabel43", { "Senpais-Trains." .. aj, am } )
 		}
 		M02[6].style = "electric_satisfaction_progressbar"
 		M04[1].style = "description_label"
