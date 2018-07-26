@@ -70,7 +70,7 @@ script.on_configuration_changed( function( d )
 	end
 end )
 
-script.on_event( { de.on_gui_click, de.on_gui_selection_state_changed, de.on_gui_checked_state_changed }, function( ee )
+script.on_event(de.on_gui_click, function( ee )
 	local id = ee.player_index
 	local p = game.players[id]
 	local e = ee.element
@@ -143,9 +143,6 @@ script.on_event( { de.on_gui_click, de.on_gui_selection_state_changed, de.on_gui
 			pa.parent.parent.children[3].clear()
 			game.print( { "Senpais-Trains.NoTrainOpen" } )
 		end
-	elseif n == "SenpaisTrainsDropDown01" then
-		pa.children[3].clear()
-		Functions.CountTrainsEntityEditList( pa.children[3], e.selected_index )
 	elseif n == "SenpaisTrainsSpriteButton07" then
 		if pa.children[1].selected_index > 0 then
 			local i = pa.children[1].selected_index
@@ -153,18 +150,12 @@ script.on_event( { de.on_gui_click, de.on_gui_selection_state_changed, de.on_gui
 			global.ScheduleLinesSignals[l] = nil
 			global.ScheduleLines[l] = nil
 			table.remove( global.Lines, i )
-			local pa2 = pa.parent.parent.parent.children[2]
-			Functions.DestroyChildren( pa2 )
-			Functions.SmarterTrainsMain( pa2 )
+			local pa2 = pa.parent.parent.parent
+			Functions.DestroyChildren( pa2.children )
+			Functions.SmarterTrainsMain( pa2.children[2] )
 		else
 			p.print( { "Senpais-Trains.NoLineSelected" } )
 		end
-	elseif n == "SenpaisTrainsDropDown02" and e.selected_index > 0 then
-		if pa.parent.children[2] then
-			pa.parent.children[2].destroy()
-		end
-		pa.children[2].elem_value = Functions.CheckSignal( global.ScheduleLines[global.Lines[e.selected_index]].signal )
-		Functions.SmarterTrainsList( pa.parent )
 	elseif pa.name == "SenpaisTrainsFrame01" then
 		if buttons[n] then
 			Functions.DestroyChildren( pa.parent.parent.children )
@@ -204,14 +195,6 @@ script.on_event( { de.on_gui_click, de.on_gui_selection_state_changed, de.on_gui
 				break
 			end
 		end
-	elseif pa.name == "SenpaisTrainsTable04" then
-		local c = pa.children
-		for u = 1, #c do
-			if c[u].type == "radiobutton" then
-				c[u].state = false
-			end
-		end
-		e.state = true
 	elseif pa.name:find( "SenpaisTrainsFrame10_" ) ~= nil then
 		local pd = global.PlayerDATA[id]
 		for _, t in pairs( pd.TrainsCount ) do
@@ -226,20 +209,37 @@ script.on_event( { de.on_gui_click, de.on_gui_selection_state_changed, de.on_gui
 	end
 end )
 
-script.on_event( defines.events.on_gui_elem_changed, function( ee )
+script.on_event( { de.on_gui_selection_state_changed, de.on_gui_checked_state_changed, de.on_gui_elem_changed }, function( ee )
 	local id = ee.player_index
 	local p = game.players[id]
 	local e = ee.element
 	local n = e.name
 	local pa = e.parent
 	if ( n == nil or pa == nil ) then return end
-	if n == "SenpaisTrainsChooseElemButton01" then
+	if n == "SenpaisTrainsDropDown01" then
+		pa.children[3].clear()
+		Functions.CountTrainsEntityEditList( pa.children[3], e.selected_index )
+	elseif n == "SenpaisTrainsChooseElemButton01" then
 		if pa.children[1].selected_index > 0 then
 			global.ScheduleLines[global.Lines[pa.children[1].selected_index]].signal = Functions.CheckSignal( e.elem_value )
 		else
-			p.print( "[Senpais Trains] " .. { "NoLineSelected" } )
+			p.print( { "Senpais-Trains.NoLineSelected" } )
 			e.elem_value = nil
 		end
+	elseif n == "SenpaisTrainsDropDown02" and e.selected_index > 0 then
+		if pa.parent.children[2] then
+			pa.parent.children[2].destroy()
+		end
+		pa.children[2].elem_value = Functions.CheckSignal( global.ScheduleLines[global.Lines[e.selected_index]].signal )
+		Functions.SmarterTrainsList( pa.parent )
+	elseif pa.name == "SenpaisTrainsTable04" then
+		local c = pa.children
+		for u = 1, #c do
+			if c[u].type == "radiobutton" then
+				c[u].state = false
+			end
+		end
+		e.state = true
 	elseif pa.name == "SenpaisTrainsTable14" then
 		for _, r in pairs( global.ScheduleLinesSignals[global.Lines[pa.parent.parent.parent.children[1].children[1].selected_index]] ) do
 			if n == "SenpaisTrainsChooseElemButton02_" .. r.station then

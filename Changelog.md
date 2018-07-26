@@ -2,6 +2,16 @@
 
 ---
 
+## Version 1.2.1
+
+### Changes
+ - Changed Localized Names a bit
+
+### Fixes
+ - Hopefully fixed finally [Issues](https://github.com/LuziferSenpai/Senpais-Trains/issues/5)
+
+---
+
 ## Version 1.2.0
 
 ### New
@@ -15,7 +25,9 @@
  - Hopefully fixed [Issues](https://github.com/LuziferSenpai/Senpais-Trains/issues/5)
 
 ---
+
 #### Older Changelogs
+
 ---
  - v1.1.6
     - Hopefully fixed [Issue](https://github.com/LuziferSenpai/Senpais-Trains/issues/4)
